@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Identifiable;
-import fr.robotv2.anchor.api.repository.Repository;
 import fr.robotv2.anchor.sql.database.SQLDatabase;
 import fr.robotv2.anchor.sql.dialect.SQLDialect;
 import fr.robotv2.anchor.sql.mapper.RowMapper;
@@ -31,15 +30,15 @@ public class SqliteDatabase implements SQLDatabase {
 
     public SqliteDatabase(File file) {
         final HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:sqlite:" + file.getPath());
-        config.setDriverClassName("org.sqlite.JDBC");
-        config.setConnectionTestQuery("SELECT 1");
-        config.setConnectionTimeout(30_000);
-        config.setIdleTimeout(600_000);
-        config.setMaxLifetime(1_800_000);
-        config.setMaximumPoolSize(10);
-        config.setPoolName("Anchor");
-        config.setConnectionTestQuery("SELECT 1");
+        config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
+        config.addDataSourceProperty("url", "jdbc:sqlite:" + file.getPath());
+        config.addDataSourceProperty("enforceForeignKeys", true); // For data integrity
+        config.addDataSourceProperty("journalMode", "WAL");
+        config.addDataSourceProperty("synchronous", "NORMAL"); // A safe and fast-syncing mode
+        config.setMaximumPoolSize(1); // prevent locking errors
+        config.setPoolName("Anchor-SQLite");
+        config.setConnectionTimeout(5_000);
+        config.setLeakDetectionThreshold(10_000);
         this.source = new HikariDataSource(config);
     }
 
@@ -66,8 +65,8 @@ public class SqliteDatabase implements SQLDatabase {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <ID, T extends Identifiable<ID>> Repository<ID, T> getRepository(Class<T> cls) {
-        return (Repository<ID, T>) repositories.computeIfAbsent(cls, c -> new SqliteRepository<>(this, cls));
+    public <ID, T extends Identifiable<ID>> SqliteRepository<ID, T> getRepository(Class<T> cls) {
+        return (SqliteRepository<ID, T>) repositories.computeIfAbsent(cls, c -> new SqliteRepository<>(this, cls));
     }
 
     @Override
