@@ -1,13 +1,10 @@
-plugins {
-    id 'java'
-}
-
 group = 'fr.robotv2.anchor'
 version = '1.0-SNAPSHOT'
 
 dependencies {
     implementation project(':Anchor-api')
     implementation project(':Anchor-sql')
-    implementation 'com.zaxxer:HikariCP:7.0.2'
-    compileOnly 'org.xerial:sqlite-jdbc:3.46.1.0'
+    testImplementation(testFixtures(project(":Anchor-api")))
+    testImplementation 'org.xerial:sqlite-jdbc:3.46.1.0'
+    compileOnly 'com.zaxxer:HikariCP:7.0.2'
 }

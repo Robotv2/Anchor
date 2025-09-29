@@ -1,7 +1,3 @@
-plugins {
-    id 'java'
-}
-
 group = 'fr.robotv2.anchor'
 version = '1.0-SNAPSHOT'
 

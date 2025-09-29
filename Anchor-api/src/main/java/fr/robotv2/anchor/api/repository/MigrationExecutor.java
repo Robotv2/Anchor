@@ -1,4 +1,4 @@
-package fr.robotv2.anchor.sql.repository;
+package fr.robotv2.anchor.api.repository;
 
 import java.sql.SQLException;
 

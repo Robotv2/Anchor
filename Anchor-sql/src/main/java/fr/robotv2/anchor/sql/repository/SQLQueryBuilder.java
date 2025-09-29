@@ -94,6 +94,7 @@ public class SQLQueryBuilder<ID, T extends Identifiable<ID>> implements QueryBui
         final String sql = dialect.getDeleteSql(metadata, conditions, params);
 
         try {
+            logger.debug("Executing DELETE: {} | params={}", sql, params);
             return database.executeUpdate(sql, params);
         } catch (SQLException exception) {
             logger.error("Failed to execute DELETE", exception);
@@ -101,9 +102,10 @@ public class SQLQueryBuilder<ID, T extends Identifiable<ID>> implements QueryBui
         }
     }
 
-    private List<T> select(int limitOverride) throws SQLException {
+    private List<T> select(Integer limitOverride) throws SQLException {
         final List<Object> params = new ArrayList<>();
         final String sql = dialect.getSelectSql(metadata, conditions, params, limitOverride);
+        logger.debug("Executing SELECT: {} | params={}", sql, params);
         final EntityRowMapper<T> mapper = new EntityRowMapper<>(cls, metadata, dialect);
         return database.query(sql, params, mapper);
     }

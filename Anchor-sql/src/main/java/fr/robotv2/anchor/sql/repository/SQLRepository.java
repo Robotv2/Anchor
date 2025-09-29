@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,15 +27,13 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements R
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
     }
 
-    public CompletableFuture<Void> createTableIfNotExists() {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                final String createTableSQL = database.getDialect().getCreateTableIfNotExists(metadata);
-                database.execute(createTableSQL);
-            } catch (SQLException exception) {
-                throw new RuntimeException("Failed to create table for " + cls.getName(), exception);
-            }
-        });
+    public void createTableIfNotExists() {
+        try {
+            final String createTableSQL = database.getDialect().getCreateTableIfNotExists(metadata);
+            database.execute(createTableSQL);
+        } catch (SQLException exception) {
+            throw new RuntimeException("Failed to create table for " + cls.getName(), exception);
+        }
     }
 
     @Override

@@ -145,7 +145,7 @@ public class SqliteDialect implements SQLDialect {
         }
 
         final String symbol = operator.getSymbol(); // "=", "!=", ">", "<", ">=", "<=", "LIKE"
-        return new SqlFragment(colSql + " " + symbol + " ?", List.of(symbol));
+        return new SqlFragment(colSql + " " + symbol + " ?", List.of(value));
     }
 
     @Override
