@@ -1,0 +1,4 @@
+rootProject.name = 'Anchor-gradle'
+include 'Anchor-api'
+include 'Anchor-sql'
+include 'Anchor-sqlite'
