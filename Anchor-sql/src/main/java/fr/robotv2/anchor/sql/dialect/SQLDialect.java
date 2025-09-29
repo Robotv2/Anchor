@@ -2,6 +2,7 @@ package fr.robotv2.anchor.sql.dialect;
 
 import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.FieldMetadata;
+import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Operator;
 
 import java.sql.Timestamp;
@@ -21,6 +22,10 @@ public interface SQLDialect {
     String getUpsertSql(EntityMetadata metadata);
 
     String getAddColumnSql(EntityMetadata metadata, FieldMetadata field);
+
+    String getCreateIndexSql(EntityMetadata metadata, IndexMetadata index);
+
+    String getDropIndexSql(EntityMetadata metadata, IndexMetadata index);
 
     String getSqlType(ColumnType type);
 

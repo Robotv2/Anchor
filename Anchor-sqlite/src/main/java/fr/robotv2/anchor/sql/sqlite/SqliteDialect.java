@@ -3,6 +3,7 @@ package fr.robotv2.anchor.sql.sqlite;
 import fr.robotv2.anchor.api.annotation.Column;
 import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.FieldMetadata;
+import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Operator;
 import fr.robotv2.anchor.sql.dialect.ColumnType;
 import fr.robotv2.anchor.sql.dialect.SqlCondition;
@@ -61,6 +62,30 @@ public class SqliteDialect implements SQLDialect {
     @Override
     public String getAddColumnSql(EntityMetadata metadata, FieldMetadata field) {
         return "ALTER TABLE " + quoteIdentifier(metadata.getEntityName()) + " ADD COLUMN " + getColumnDefinition(field);
+    }
+
+    @Override
+    public String getCreateIndexSql(EntityMetadata metadata, IndexMetadata index) {
+        StringBuilder sb = new StringBuilder("CREATE ");
+        if (index.isUnique()) {
+            sb.append("UNIQUE ");
+        }
+        sb.append("INDEX ");
+        sb.append(quoteIdentifier(index.getName()));
+        sb.append(" ON ");
+        sb.append(quoteIdentifier(metadata.getEntityName()));
+        sb.append(" (");
+
+        String columnList = index.getColumns().stream().map(this::quoteIdentifier).collect(Collectors.joining(", "));
+
+        sb.append(columnList);
+        sb.append(")");
+        return sb.toString();
+    }
+
+    @Override
+    public String getDropIndexSql(EntityMetadata metadata, IndexMetadata index) {
+        return "DROP INDEX IF EXISTS " + quoteIdentifier(index.getName());
     }
 
     @Override

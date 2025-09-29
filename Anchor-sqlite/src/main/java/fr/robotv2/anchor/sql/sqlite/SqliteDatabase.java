@@ -2,6 +2,8 @@ package fr.robotv2.anchor.sql.sqlite;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import fr.robotv2.anchor.api.metadata.EntityMetadata;
+import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Identifiable;
 import fr.robotv2.anchor.api.repository.Repository;
 import fr.robotv2.anchor.sql.database.SQLDatabase;
@@ -41,6 +43,12 @@ public class SqliteDatabase implements SQLDatabase {
         this.source = new HikariDataSource(config);
     }
 
+    public SqliteDatabase(HikariConfig config, File file) {
+        config.setJdbcUrl("jdbc:sqlite:" + file.getPath());
+        config.setDriverClassName("org.sqlite.JDBC");
+        this.source = new HikariDataSource(config);
+    }
+
     @Override
     public void connect() {}
 
@@ -57,8 +65,9 @@ public class SqliteDatabase implements SQLDatabase {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <ID, T extends Identifiable<ID>> Repository<ID, T> getRepository(Class<T> cls) {
-        return new SqliteRepository<>(this, cls);
+        return (Repository<ID, T>) repositories.computeIfAbsent(cls, c -> new SqliteRepository<>(this, cls));
     }
 
     @Override
@@ -138,5 +147,17 @@ public class SqliteDatabase implements SQLDatabase {
             }
             return results;
         }
+    }
+
+    @Override
+    public boolean createIndex(EntityMetadata metadata, IndexMetadata index) throws SQLException {
+        String sql = dialect.getCreateIndexSql(metadata, index);
+        return execute(sql);
+    }
+
+    @Override
+    public boolean dropIndex(EntityMetadata metadata, IndexMetadata index) throws SQLException {
+        String sql = dialect.getDropIndexSql(metadata, index);
+        return execute(sql);
     }
 }

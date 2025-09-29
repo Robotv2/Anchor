@@ -3,13 +3,16 @@ package fr.robotv2.anchor.api.metadata;
 import fr.robotv2.anchor.api.annotation.Column;
 import fr.robotv2.anchor.api.annotation.Entity;
 import fr.robotv2.anchor.api.annotation.Id;
+import fr.robotv2.anchor.api.annotation.Index;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,12 +25,14 @@ public class EntityMetadata {
     private final FieldMetadata idField;
 
     private final Map<String, FieldMetadata> fields;
+    private final List<IndexMetadata> indexes;
 
-    private EntityMetadata(Entity entity, Id id, FieldMetadata idField, Map<String, FieldMetadata> fields) {
+    private EntityMetadata(Entity entity, Id id, FieldMetadata idField, Map<String, FieldMetadata> fields, List<IndexMetadata> indexes) {
         this.entity = entity;
         this.id = id;
         this.idField = idField;
         this.fields = fields;
+        this.indexes = indexes;
     }
 
     @NotNull
@@ -78,6 +83,12 @@ public class EntityMetadata {
 
     @NotNull
     @UnmodifiableView
+    public List<IndexMetadata> getIndexes() {
+        return Collections.unmodifiableList(indexes);
+    }
+
+    @NotNull
+    @UnmodifiableView
     public Map<String, Object> extract(Object value) {
         final Map<String, Object> values = new LinkedHashMap<>();
         for (FieldMetadata fm : getAllFields().values()) {
@@ -93,6 +104,7 @@ public class EntityMetadata {
 
         final Entity entity = cls.getAnnotation(Entity.class);
         final Map<String, FieldMetadata> fields = new LinkedHashMap<>();
+        final List<IndexMetadata> indexes = new ArrayList<>();
 
         FieldMetadata idField = null;
         Id id = null;
@@ -123,6 +135,32 @@ public class EntityMetadata {
             throw new IllegalArgumentException("Entity must have one @Id field");
         }
 
-        return new EntityMetadata(entity, id, idField, fields);
+        processEntityIndexes(cls, indexes);
+        processFieldIndexes(cls, indexes);
+
+        return new EntityMetadata(entity, id, idField, fields, indexes);
+    }
+
+    private static void processEntityIndexes(Class<?> cls, List<IndexMetadata> indexes) {
+        if (cls.isAnnotationPresent(Index.class)) {
+            Index indexAnnotation = cls.getAnnotation(Index.class);
+            String entityName = cls.getAnnotation(Entity.class).value();
+            String defaultIndexName = "idx_" + entityName;
+            IndexMetadata indexMetadata = IndexMetadata.fromAnnotation(indexAnnotation, defaultIndexName, new ArrayList<>());
+            indexes.add(indexMetadata);
+        }
+    }
+
+    private static void processFieldIndexes(Class<?> cls, List<IndexMetadata> indexes) {
+        for (Field field : cls.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Index.class) && field.isAnnotationPresent(Column.class)) {
+                Index indexAnnotation = field.getAnnotation(Index.class);
+                Column columnAnnotation = field.getAnnotation(Column.class);
+                String entityName = cls.getAnnotation(Entity.class).value();
+                String defaultIndexName = "idx_" + entityName + "_" + columnAnnotation.value();
+                IndexMetadata indexMetadata = IndexMetadata.fromAnnotation(indexAnnotation, defaultIndexName, List.of(columnAnnotation.value()));
+                indexes.add(indexMetadata);
+            }
+        }
     }
 }

@@ -1,6 +1,8 @@
 package fr.robotv2.anchor.sql.database;
 
 import fr.robotv2.anchor.api.database.Database;
+import fr.robotv2.anchor.api.metadata.EntityMetadata;
+import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.sql.dialect.SQLDialect;
 import fr.robotv2.anchor.sql.mapper.RowMapper;
 
@@ -24,4 +26,8 @@ public interface SQLDatabase extends Database {
     <R> List<R> query(String sql, Collection<Object> parameters, RowMapper<R> mapper) throws SQLException;
 
     <R> List<R> queryRaw(String sql, RowMapper<R> mapper) throws SQLException;
+
+    boolean createIndex(EntityMetadata metadata, IndexMetadata index) throws SQLException;
+
+    boolean dropIndex(EntityMetadata metadata, IndexMetadata index) throws SQLException;
 }
