@@ -126,7 +126,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
         return new File(database.getFile(),
                 String.format(
                         format,
-                        cls.getSimpleName().toLowerCase(),
+                        metadata.getEntityName().toLowerCase(),
                         id
                 )
         );
