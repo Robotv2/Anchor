@@ -30,6 +30,7 @@ public class AnchorBukkit {
                 .groupId("com{}google{}code{}gson")
                 .artifactId("gson")
                 .version("2.10.1")
+                .relocate("com{}google{}gson", relocationPrefix + "{}anchor{}gson")
                 .build();
         manager.loadLibrary(gson);
     }
