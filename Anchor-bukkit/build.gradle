@@ -1,0 +1,30 @@
+plugins {
+    id("com.gradleup.shadow") version "9.2.2"
+}
+
+group = 'fr.robotv2.anchor'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    maven {
+        name = "maven-snapshots"
+        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    }
+    maven {
+        name = "spigotmc-repo"
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/groups/public/"
+    }
+    maven {
+        name = "jitpack.io"
+        url = 'https://jitpack.io'
+    }
+}
+
+dependencies {
+    implementation("com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT")
+    compileOnly "org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT"
+}
