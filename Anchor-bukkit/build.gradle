@@ -22,6 +22,6 @@ repositories {
 }
 
 dependencies {
-    implementation("com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT")
+    api "com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT"
     compileOnly "org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT"
 }
