@@ -1,0 +1,21 @@
+// This file centralizes all dependency versions and coordinates.
+ext {
+    versions = [
+            junit       : '5.10.2',
+            junit_platform: '5.10.0',
+            annotations : '24.0.1',
+            gson        : '2.13.2',
+            hikari      : '7.0.2',
+            sqlite_jdbc : '3.46.1.0',
+    ]
+
+    libs = [
+            jetbrains_annotations: "org.jetbrains:annotations:${versions.annotations}",
+            gson                 : "com.google.code.gson:gson:${versions.gson}",
+            hikari               : "com.zaxxer:HikariCP:${versions.hikari}",
+            sqlite_jdbc          : "org.xerial:sqlite-jdbc:${versions.sqlite_jdbc}",
+            junit_bom            : "org.junit:junit-bom:${versions.junit_platform}",
+            junit_jupiter        : "org.junit.jupiter:junit-jupiter:${versions.junit}",
+            junit_jupiter_api    : "org.junit.jupiter:junit-jupiter-api:${versions.junit}",
+    ]
+}

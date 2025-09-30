@@ -1,6 +1,6 @@
 dependencies {
     api project(':Anchor-api')
-    compileOnly 'com.google.code.gson:gson:2.13.2'
-    testImplementation 'com.google.code.gson:gson:2.13.2'
-    testImplementation(testFixtures(project(":Anchor-api")))
+    compileOnly libs.gson
+    testImplementation libs.gson
+    testImplementation testFixtures(project(':Anchor-api'))
 }

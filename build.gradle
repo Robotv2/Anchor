@@ -1,25 +1,35 @@
-plugins {
-    id 'java-library'
-    id "maven-publish"
-}
-
-group = 'fr.robotv2.anchor'
-version = '1.0-SNAPSHOT'
-
 subprojects {
     apply plugin: 'java-library'
-    apply plugin: "maven-publish"
+    apply plugin: 'maven-publish'
+    apply from: "$rootDir/dependencies.gradle"
 
     group = 'fr.robotv2.anchor'
     version = '1.0-SNAPSHOT'
 
-    // java 17
-    sourceCompatibility = 17
-    targetCompatibility = 17
-
     java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
         withSourcesJar()
         withJavadocJar()
+    }
+
+    compileJava {
+        options.encoding = "UTF-8"
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compileOnly libs.jetbrains_annotations
+        testImplementation platform(libs.junit_bom)
+        testImplementation libs.junit_jupiter
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     publishing {
@@ -28,23 +38,5 @@ subprojects {
                 from components.java
             }
         }
-    }
-
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        compileOnly 'org.jetbrains:annotations:24.0.1'
-        testImplementation platform('org.junit:junit-bom:5.10.0')
-        testImplementation 'org.junit.jupiter:junit-jupiter'
-    }
-
-    test {
-        useJUnitPlatform()
-    }
-
-    compileJava {
-        options.encoding = "UTF-8"
     }
 }
