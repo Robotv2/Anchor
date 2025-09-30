@@ -16,7 +16,7 @@ public class AnchorBukkit {
         manager.addJitPack();
 
         if(classExists(JSON_PKG)) {
-            // loadJson(manager, relocationPrefix); // Gson is already in spigot-api
+            loadJson(manager, relocationPrefix); // Gson is already in spigot-api
         }
 
         if(classExists(SQLITE_PKG)) {
