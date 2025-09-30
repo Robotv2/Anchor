@@ -1,0 +1,9 @@
+group = 'fr.robotv2.anchor'
+version = '1.0-SNAPSHOT'
+
+dependencies {
+    implementation project(':Anchor-api')
+    compileOnly 'com.google.code.gson:gson:2.13.2'
+    testImplementation 'com.google.code.gson:gson:2.13.2'
+    testImplementation(testFixtures(project(":Anchor-api")))
+}
