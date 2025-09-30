@@ -4,7 +4,6 @@ import fr.robotv2.anchor.api.annotation.Index;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class IndexMetadata {
 

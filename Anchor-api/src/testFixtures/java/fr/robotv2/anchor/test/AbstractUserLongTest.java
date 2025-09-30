@@ -7,11 +7,7 @@ import fr.robotv2.anchor.api.repository.Queryable;
 import fr.robotv2.anchor.api.repository.Repository;
 import fr.robotv2.anchor.test.model.UserLong;
 import fr.robotv2.anchor.test.model.UserLongAdd;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;

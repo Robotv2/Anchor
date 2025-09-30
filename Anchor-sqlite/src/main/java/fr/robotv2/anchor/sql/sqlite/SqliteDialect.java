@@ -6,8 +6,8 @@ import fr.robotv2.anchor.api.metadata.FieldMetadata;
 import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Operator;
 import fr.robotv2.anchor.sql.dialect.ColumnType;
-import fr.robotv2.anchor.sql.dialect.SqlCondition;
 import fr.robotv2.anchor.sql.dialect.SQLDialect;
+import fr.robotv2.anchor.sql.dialect.SqlCondition;
 import fr.robotv2.anchor.sql.dialect.SqlFragment;
 
 import java.lang.reflect.Field;

@@ -70,5 +70,4 @@ public class JsonDatabase implements Database {
     public File getFile() {
         return file;
     }
-
 }

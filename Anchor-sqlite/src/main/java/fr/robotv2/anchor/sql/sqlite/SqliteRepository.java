@@ -3,8 +3,8 @@ package fr.robotv2.anchor.sql.sqlite;
 import fr.robotv2.anchor.api.metadata.FieldMetadata;
 import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Identifiable;
-import fr.robotv2.anchor.sql.database.SQLDatabase;
 import fr.robotv2.anchor.api.repository.MigrationExecutor;
+import fr.robotv2.anchor.sql.database.SQLDatabase;
 import fr.robotv2.anchor.sql.repository.SQLRepository;
 
 import java.sql.SQLException;
