@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(':Anchor-api')
+    api project(':Anchor-api')
     compileOnly 'com.zaxxer:HikariCP:7.0.2'
     testImplementation 'com.zaxxer:HikariCP:7.0.2'
 }

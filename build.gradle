@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id "maven-publish"
 }
 
@@ -7,7 +7,7 @@ group = 'fr.robotv2.anchor'
 version = '1.0-SNAPSHOT'
 
 subprojects {
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: "maven-publish"
 
     group = 'fr.robotv2.anchor'
