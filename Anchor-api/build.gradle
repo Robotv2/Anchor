@@ -2,9 +2,6 @@ plugins {
     id("java-test-fixtures")
 }
 
-group = 'fr.robotv2.anchor'
-version = '1.0-SNAPSHOT'
-
 dependencies {
     testFixturesImplementation project
     testFixturesImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
