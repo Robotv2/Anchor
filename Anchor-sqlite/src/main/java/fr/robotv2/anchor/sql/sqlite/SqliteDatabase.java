@@ -142,13 +142,11 @@ public class SqliteDatabase implements SQLDatabase {
 
     @Override
     public boolean createIndex(EntityMetadata metadata, IndexMetadata index) throws SQLException {
-        String sql = dialect.getCreateIndexSql(metadata, index);
-        return execute(sql);
+        return execute(dialect.getCreateIndexSql(metadata, index));
     }
 
     @Override
     public boolean dropIndex(EntityMetadata metadata, IndexMetadata index) throws SQLException {
-        String sql = dialect.getDropIndexSql(metadata, index);
-        return execute(sql);
+        return execute(dialect.getDropIndexSql(metadata, index));
     }
 }

@@ -81,7 +81,7 @@ public class SQLQueryBuilder<ID, T extends Identifiable<ID>> implements QueryBui
     public T one() {
         try {
             final List<T> results = select(1);
-            return results.isEmpty() ? null : results.getFirst();
+            return results.isEmpty() ? null : results.get(0);
         } catch (SQLException exception) {
             logger.error("Failed to execute SELECT one", exception);
             throw new RuntimeException("SELECT failed", exception);

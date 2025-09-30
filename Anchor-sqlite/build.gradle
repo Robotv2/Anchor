@@ -4,4 +4,5 @@ dependencies {
     testImplementation(testFixtures(project(":Anchor-api")))
     testImplementation 'org.xerial:sqlite-jdbc:3.46.1.0'
     compileOnly 'com.zaxxer:HikariCP:7.0.2'
+    testImplementation 'com.zaxxer:HikariCP:7.0.2'
 }
