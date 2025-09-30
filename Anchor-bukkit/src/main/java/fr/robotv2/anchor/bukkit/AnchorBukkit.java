@@ -15,6 +15,8 @@ public class AnchorBukkit {
         manager.addMavenCentral();
         manager.addJitPack();
 
+        relocationPrefix = relocationPrefix.replace(".", "{}");
+
         if(classExists(JSON_PKG)) {
             loadJson(manager, relocationPrefix); // Gson is already in spigot-api
         }
