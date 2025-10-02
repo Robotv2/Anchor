@@ -1,5 +1,7 @@
 package fr.robotv2.anchor.json;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.robotv2.anchor.api.annotation.Column;
@@ -21,6 +23,17 @@ public class JsonDatabase implements Database {
             .enableComplexMapKeySerialization()
             .excludeFieldsWithModifiers(Modifier.TRANSIENT, Modifier.STATIC)
             .registerTypeAdapter(LocalDateTime.class, new LocalDataTimeAdapter())
+            .setExclusionStrategies(new ExclusionStrategy() {
+                @Override
+                public boolean shouldSkipField(FieldAttributes field) {
+                    return field.hasModifier(Modifier.TRANSIENT) || field.hasModifier(Modifier.STATIC) || field.getAnnotation(Column.class) == null;
+                }
+
+                @Override
+                public boolean shouldSkipClass(Class<?> clazz) {
+                    return false;
+                }
+            })
             .setFieldNamingStrategy((field) -> field.getAnnotation(Column.class) != null ? field.getAnnotation(Column.class).value() : field.getName())
             .create();
 
