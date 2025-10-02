@@ -13,7 +13,6 @@ import java.lang.annotation.Target;
  *   <li>A field (creates an index on that specific column)</li>
  *   <li>An entity class (creates a composite index on multiple columns)</li>
  * </ul>
- * </p>
  *
  * @since 1.0
  * @see Entity

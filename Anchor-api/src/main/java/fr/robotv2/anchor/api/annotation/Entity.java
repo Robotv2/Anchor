@@ -14,7 +14,6 @@ import java.lang.annotation.Target;
  *   <li>One or more fields annotated with {@link Column}</li>
  *   <li>A no-argument constructor (either explicit or default)</li>
  * </ul>
- * </p>
  *
  * @since 1.0
  * @see Column

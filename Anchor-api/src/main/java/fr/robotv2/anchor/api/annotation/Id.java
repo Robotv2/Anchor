@@ -16,7 +16,6 @@ import java.lang.annotation.Target;
  *   <li>Lookup operations (findById, deleteById)</li>
  *   <li>Entity identity and equality comparisons</li>
  * </ul>
- * </p>
  *
  * @since 1.0
  * @see Entity

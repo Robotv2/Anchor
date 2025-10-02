@@ -54,7 +54,6 @@ public @interface Column {
      *   <li>Adding column constraints (e.g., DEFAULT, UNIQUE)</li>
      *   <li>Using database-specific types</li>
      * </ul>
-     * </p>
      *
      * <p><strong>Example:</strong> {@code "VARCHAR(255) UNIQUE"}, {@code "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"}</p>
      *
