@@ -1,27 +1,32 @@
 plugins {
-    id("com.gradleup.shadow") version "9.2.2"
+    id('com.gradleup.shadow') version '9.2.2'
 }
 
 repositories {
     maven {
-        name = "maven-snapshots"
-        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        name = 'maven-snapshots'
+        url = uri('https://s01.oss.sonatype.org/content/repositories/snapshots/')
     }
     maven {
-        name = "spigotmc-repo"
-        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }
     maven {
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/groups/public/"
-    }
-    maven {
-        name = "jitpack.io"
+        name = 'jitpack.io'
         url = 'https://jitpack.io'
     }
 }
 
 dependencies {
-    api "com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT"
-    compileOnly "org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT"
+    implementation 'com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT'
+    compileOnly 'org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT'
+}
+
+shadowJar {
+    relocate 'com.alessiodp.libby', 'fr.robotv2.anchor.bukkit.libby'
+    archiveClassifier.set('')
+}
+
+tasks.build {
+    dependsOn shadowJar
 }

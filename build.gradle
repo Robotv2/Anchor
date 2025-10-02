@@ -1,3 +1,4 @@
+// Root build.gradle
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
@@ -14,8 +15,8 @@ subprojects {
         withJavadocJar()
     }
 
-    compileJava {
-        options.encoding = "UTF-8"
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
     }
 
     repositories {
@@ -34,9 +35,36 @@ subprojects {
 
     publishing {
         publications {
-            mavenJava(MavenPublication) {
-                from components.java
+            // Choose component later (prefer shadow if present)
+            mavenJava(MavenPublication)
+        }
+    }
+
+    // Prefer publishing the shadow component when present. Only attach
+    // sources/javadoc when using shadow (components.java already includes them).
+    afterEvaluate {
+        publishing {
+            publications.named('mavenJava', MavenPublication) { pub ->
+                def shadowComponent = components.findByName('shadow')
+                if (shadowComponent != null) {
+                    from(shadowComponent)
+                    def sourcesJarTask = tasks.findByName('sourcesJar')
+                    if (sourcesJarTask != null) {
+                        artifact(sourcesJarTask)
+                    }
+                    def javadocJarTask = tasks.findByName('javadocJar')
+                    if (javadocJarTask != null) {
+                        artifact(javadocJarTask)
+                    }
+                } else {
+                    from(components.java)
+                }
             }
         }
+    }
+
+    // For shaded modules, disable the plain jar to avoid duplicate artifacts
+    plugins.withId('com.gradleup.shadow') {
+        tasks.named('jar').configure { enabled = false }
     }
 }
