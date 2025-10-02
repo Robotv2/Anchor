@@ -5,13 +5,15 @@ import com.alessiodp.libby.Library;
 import com.alessiodp.libby.LibraryManager;
 import org.bukkit.plugin.Plugin;
 
+import java.io.File;
+
 public class AnchorBukkit {
 
     public static final String JSON_PKG = "fr.robotv2.anchor.json.JsonDatabase";
     public static final String SQLITE_PKG = "fr.robotv2.anchor.sql.sqlite.SqliteDatabase";
     public static final String MARIADB_PKG = "fr.robotv2.anchor.sql.mariadb.MariaDBDatabase";
 
-    public static void init(Plugin plugin, String directory, String relocationPrefix) {
+    public static void downloadDependencies(Plugin plugin, String directory, String relocationPrefix) {
         final BukkitLibraryManager manager = new BukkitLibraryManager(plugin, directory);
         manager.addMavenCentral();
         manager.addJitPack();
@@ -19,7 +21,7 @@ public class AnchorBukkit {
         relocationPrefix = relocationPrefix.replace(".", "{}");
 
         if(classExists(JSON_PKG)) {
-            loadJson(manager, relocationPrefix); // Gson is already in spigot-api
+            loadJson(manager, relocationPrefix);
         }
 
         if(classExists(SQLITE_PKG)) {
@@ -31,7 +33,15 @@ public class AnchorBukkit {
         }
     }
 
+    public static void downloadDependencies(Plugin plugin, File directory, String relocationPrefix) {
+        downloadDependencies(plugin, directory.getAbsolutePath(), relocationPrefix);
+    }
+
     private static void loadJson(LibraryManager manager, String relocationPrefix) {
+        if(classExists("com.google.gson.Gson")) {
+            return; // Gson already exists
+        }
+
         final Library gson = Library.builder()
                 .groupId("com{}google{}code{}gson")
                 .artifactId("gson")
