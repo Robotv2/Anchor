@@ -5,7 +5,9 @@ import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.sql.dialect.SQLDialect;
 import fr.robotv2.anchor.sql.mapper.RowMapper;
+import org.jetbrains.annotations.ApiStatus;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,8 +23,12 @@ public abstract class HikariDatabase implements SQLDatabase {
     protected final HikariDataSource source;
     protected final SQLDialect dialect;
 
-    protected HikariDatabase(HikariDataSource source, SQLDialect dialect) {
-        this.source = source;
+    @ApiStatus.Internal
+    protected HikariDatabase(DataSource source, SQLDialect dialect) {
+        if(!(source instanceof HikariDataSource)) {
+            throw new IllegalArgumentException("DataSource must be an instance of HikariDataSource");
+        }
+        this.source = (HikariDataSource) source;
         this.dialect = dialect;
     }
 

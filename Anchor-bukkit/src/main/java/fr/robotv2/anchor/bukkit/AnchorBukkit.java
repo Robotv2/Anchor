@@ -9,6 +9,7 @@ public class AnchorBukkit {
 
     public static final String JSON_PKG = "fr.robotv2.anchor.json.JsonDatabase";
     public static final String SQLITE_PKG = "fr.robotv2.anchor.sql.sqlite.SqliteDatabase";
+    public static final String MARIADB_PKG = "fr.robotv2.anchor.sql.mariadb.MariaDBDatabase";
 
     public static void init(Plugin plugin, String directory, String relocationPrefix) {
         final BukkitLibraryManager manager = new BukkitLibraryManager(plugin, directory);
@@ -22,8 +23,11 @@ public class AnchorBukkit {
         }
 
         if(classExists(SQLITE_PKG)) {
-            loadHikari(manager, relocationPrefix);
             loadSqlite(manager, relocationPrefix);
+        }
+
+        if(classExists(MARIADB_PKG)) {
+            loadMariadb(manager, relocationPrefix);
         }
     }
 
@@ -37,16 +41,6 @@ public class AnchorBukkit {
         manager.loadLibrary(gson);
     }
 
-    private static void loadHikari(LibraryManager manager, String relocationPrefix) {
-        final Library hikari = Library.builder()
-                .groupId("com{}zaxxer")
-                .artifactId("HikariCP")
-                .version("7.0.2")
-                .relocate("com{}zaxxer", relocationPrefix + "{}anchor{}hikari")
-                .build();
-        manager.loadLibrary(hikari);
-    }
-
     private static void loadSqlite(LibraryManager manager, String relocationPrefix) {
         final Library sqlite = Library.builder()
                 .groupId("org{}xerial")
@@ -55,6 +49,23 @@ public class AnchorBukkit {
                 .relocate("org{}sqlite", relocationPrefix + "{}anchor{}sqlite")
                 .build();
         manager.loadLibrary(sqlite);
+    }
+
+    private static void loadMariadb(LibraryManager manager, String relocationPrefix) {
+        final Library mariadb = Library.builder()
+                .groupId("org{}mariadb{}jdbc")
+                .artifactId("mariadb-java-client")
+                .version("3.2.0")
+                .relocate("org{}mariadb{}jdbc", relocationPrefix + "{}anchor{}mariadb{}jdbc")
+                .build();
+        manager.loadLibrary(mariadb);
+        final Library connector = Library.builder()
+                .groupId("com{}mysql")
+                .artifactId("mysql-connector-j")
+                .version("8.1.0")
+                .relocate("com{}mysql", relocationPrefix + "{}anchor{}mysql{}mysql-connector")
+                .build();
+        manager.loadLibrary(connector);
     }
 
     private static boolean classExists(String className) {

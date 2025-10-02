@@ -7,6 +7,9 @@ ext {
             gson        : '2.13.2',
             hikari      : '7.0.2',
             sqlite_jdbc : '3.46.1.0',
+            mariadb_java_client: '3.2.0',
+            mysql_connector_java: '8.1.0',
+            spigot_api: '1.21-R0.1-SNAPSHOT'
     ]
 
     libs = [
@@ -17,5 +20,8 @@ ext {
             junit_bom            : "org.junit:junit-bom:${versions.junit_platform}",
             junit_jupiter        : "org.junit.jupiter:junit-jupiter:${versions.junit}",
             junit_jupiter_api    : "org.junit.jupiter:junit-jupiter-api:${versions.junit}",
+            spigot_api: "org.spigotmc:spigot-api:${versions.spigot_api}",
+            mariadb_java_client: "org.mariadb.jdbc:mariadb-java-client:${versions.mariadb_java_client}",
+            mysql_connector_java: "com.mysql:mysql-connector-j:${versions.mysql_connector_java}"
     ]
 }

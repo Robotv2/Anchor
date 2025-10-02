@@ -3,6 +3,7 @@ package fr.robotv2.anchor.test.model;
 import fr.robotv2.anchor.api.annotation.Column;
 import fr.robotv2.anchor.api.annotation.Entity;
 import fr.robotv2.anchor.api.annotation.Id;
+import fr.robotv2.anchor.api.annotation.Index;
 import fr.robotv2.anchor.api.repository.Identifiable;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class UserLongAdd implements Identifiable<Long> {
     private Long id;
 
     @Column("name")
+    @Index
     private String name;
 
     @Column("age")

@@ -36,6 +36,15 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements R
         }
     }
 
+    public void dropTable() {
+        try {
+            final String dropTableSQL = database.getDialect().getDropTableSql(metadata);
+            database.execute(dropTableSQL);
+        } catch (SQLException exception) {
+            throw new RuntimeException("Failed to drop table for " + cls.getName(), exception);
+        }
+    }
+
     @Override
     public void save(T entity) {
         final String upsert = database.getDialect().getUpsertSql(metadata);
