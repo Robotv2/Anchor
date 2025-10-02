@@ -7,11 +7,14 @@ import fr.robotv2.anchor.api.repository.Queryable;
 import fr.robotv2.anchor.api.repository.Repository;
 import fr.robotv2.anchor.test.model.UserLong;
 import fr.robotv2.anchor.test.model.UserLongAdd;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
@@ -26,7 +29,9 @@ public abstract class AbstractUserLongTest {
 
     protected abstract Database createDatabase(Path tempDir);
 
-    protected abstract void onRepositoryReady(Repository<Long, UserLong> repository);
+    protected void onRepositoryReady(Repository<Long, UserLong> repository) {}
+
+    protected void onTearDown(Database database, Repository<Long, UserLong> repository) { }
 
     @BeforeEach
     void setUp() {
@@ -41,6 +46,7 @@ public abstract class AbstractUserLongTest {
 
     @AfterEach
     void tearDown() {
+        onTearDown(database, repository);
         if (database != null) {
             database.disconnect();
         }
@@ -203,7 +209,7 @@ public abstract class AbstractUserLongTest {
     }
 
     @Test
-    public void testUpMigration() throws SQLException {
+    public void testUpMigration() throws Exception {
         final Repository<Long, UserLongAdd> newRepo = database.getRepository(UserLongAdd.class);
 
         Assumptions.assumeTrue(newRepo instanceof MigrationExecutor, "Repository does not support migration.");
