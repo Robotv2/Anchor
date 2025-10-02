@@ -31,7 +31,6 @@ public @interface Index {
      *   <li>For class-level indexes: {@code "idx_<entity>"}</li>
      * </ul>
      * The name should be unique within the database schema.
-     * </p>
      *
      * @return the name of the index, or empty string for auto-generated name
      */
@@ -60,7 +59,6 @@ public @interface Index {
      *   <li>Ensuring unique usernames</li>
      *   <li>Creating natural key constraints</li>
      * </ul>
-     * </p>
      *
      * @return {@code true} if the index should be unique, {@code false} otherwise
      */
