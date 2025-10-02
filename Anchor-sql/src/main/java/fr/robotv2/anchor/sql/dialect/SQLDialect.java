@@ -13,28 +13,172 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Interface for database-specific SQL generation and type conversion.
+ * <p>
+ * SQLDialect provides the contract for generating database-specific SQL statements
+ * and handling type conversions between Java types and database types. Each supported
+ * database system (SQLite, MariaDB, etc.) implements this interface to provide
+ * the appropriate SQL syntax and type handling for that database.
+ * </p>
+ *
+ * @since 1.0
+ * @see EntityMetadata
+ * @see FieldMetadata
+ * @see IndexMetadata
+ */
 public interface SQLDialect {
 
+    /**
+     * Generates SQL to create a table if it doesn't already exist.
+     * <p>
+     * This method should create a CREATE TABLE IF NOT EXISTS statement with all
+     * columns defined according to the entity metadata. The statement should include
+     * primary key constraints and appropriate data types for the target database.
+     * </p>
+     *
+     * @param metadata the entity metadata containing table and column information, must not be {@code null}
+     * @return SQL statement to create the table, never {@code null}
+     */
     String getCreateTableIfNotExists(EntityMetadata metadata);
 
+    /**
+     * Generates SQL to drop a table.
+     * <p>
+     * This method should create a DROP TABLE statement that removes the table
+     * if it exists. The implementation should use the appropriate syntax
+     * for the target database (e.g., DROP TABLE IF EXISTS).
+     * </p>
+     *
+     * @param metadata the entity metadata containing table information, must not be {@code null}
+     * @return SQL statement to drop the table, never {@code null}
+     */
     String getDropTableSql(EntityMetadata metadata);
 
+    /**
+     * Generates SQL for an upsert (INSERT OR UPDATE) operation.
+     * <p>
+     * This method should create an SQL statement that inserts a new row or
+     * updates an existing row based on the primary key. The exact syntax
+     * varies between databases (e.g., ON DUPLICATE KEY UPDATE for MySQL,
+     * INSERT OR REPLACE for SQLite).
+     * </p>
+     *
+     * @param metadata the entity metadata containing table and column information, must not be {@code null}
+     * @return SQL statement for upsert operation, never {@code null}
+     */
     String getUpsertSql(EntityMetadata metadata);
 
+    /**
+     * Generates SQL to add a new column to an existing table.
+     * <p>
+     * This method should create an ALTER TABLE statement that adds a new column
+     * with the appropriate data type and constraints based on the field metadata.
+     * </p>
+     *
+     * @param metadata the entity metadata containing table information, must not be {@code null}
+     * @param field the metadata for the field to add, must not be {@code null}
+     * @return SQL statement to add the column, never {@code null}
+     */
     String getAddColumnSql(EntityMetadata metadata, FieldMetadata field);
 
+    /**
+     * Generates SQL to create an index.
+     * <p>
+     * This method should create a CREATE INDEX statement for the specified
+     * columns. The implementation should handle unique indexes appropriately
+     * and use proper syntax for the target database.
+     * </p>
+     *
+     * @param metadata the entity metadata containing table information, must not be {@code null}
+     * @param index the index metadata containing name and columns, must not be {@code null}
+     * @return SQL statement to create the index, never {@code null}
+     */
     String getCreateIndexSql(EntityMetadata metadata, IndexMetadata index);
 
+    /**
+     * Generates SQL to drop an index.
+     * <p>
+     * This method should create a DROP INDEX statement using the appropriate
+     * syntax for the target database. Some databases require specifying the
+     * table name while others don't.
+     * </p>
+     *
+     * @param metadata the entity metadata containing table information, must not be {@code null}
+     * @param index the index metadata containing the index name, must not be {@code null}
+     * @return SQL statement to drop the index, never {@code null}
+     */
     String getDropIndexSql(EntityMetadata metadata, IndexMetadata index);
 
+    /**
+     * Returns the database-specific SQL type for a generic column type.
+     * <p>
+     * This method maps generic column types to database-specific data types.
+     * For example, ColumnType.STRING might map to VARCHAR(255) in MySQL
+     * but TEXT in SQLite.
+     * </p>
+     *
+     * @param type the generic column type, must not be {@code null}
+     * @return the database-specific SQL type, never {@code null}
+     */
     String getSqlType(ColumnType type);
 
+    /**
+     * Generates a LIMIT clause for query results.
+     * <p>
+     * This method should return the appropriate LIMIT clause syntax for the
+     * target database. If limit is null, an empty string should be returned.
+     * </p>
+     *
+     * @param limit the maximum number of results to return, may be {@code null}
+     * @return the LIMIT clause, or empty string if limit is null
+     */
     String getLimitClause(Integer limit);
 
+    /**
+     * Generates a SELECT query with optional WHERE clause and LIMIT.
+     * <p>
+     * This method should create a complete SELECT statement that retrieves
+     * all columns from the entity table, optionally filtered by conditions
+     * and limited to a specific number of results.
+     * </p>
+     *
+     * @param metadata the entity metadata containing table information, must not be {@code null}
+     * @param conditions list of WHERE conditions, may be empty
+     * @param params list to collect parameter values, may be empty
+     * @param limit optional result limit, may be {@code null}
+     * @return complete SELECT SQL statement, never {@code null}
+     */
     String getSelectSql(EntityMetadata metadata, List<SqlCondition> conditions, List<Object> params, Integer limit);
 
+    /**
+     * Generates a DELETE query with optional WHERE clause.
+     * <p>
+     * This method should create a DELETE statement that removes rows from the
+     * entity table, optionally filtered by conditions. If no conditions are
+     * provided, this should delete all rows.
+     * </p>
+     *
+     * @param metadata the entity metadata containing table information, must not be {@code null}
+     * @param conditions list of WHERE conditions, may be empty
+     * @param params list to collect parameter values, may be empty
+     * @return complete DELETE SQL statement, never {@code null}
+     */
     String getDeleteSql(EntityMetadata metadata, List<SqlCondition> conditions, List<Object> params);
 
+    /**
+     * Builds a SQL predicate fragment for a comparison operation.
+     * <p>
+     * This method should create a WHERE clause predicate comparing a column
+     * to a value using the specified operator. The result should include
+     * parameter placeholders rather than literal values.
+     * </p>
+     *
+     * @param column the column name to compare, must not be {@code null}
+     * @param operator the comparison operator, must not be {@code null}
+     * @param value the value to compare against, may be {@code null}
+     * @return a SqlFragment containing the predicate and parameters, never {@code null}
+     */
     SqlFragment buildPredicate(String column, Operator operator, Object value);
 
     default String buildWhereClauseAndCollectParams(List<SqlCondition> conditions, List<Object> params) {

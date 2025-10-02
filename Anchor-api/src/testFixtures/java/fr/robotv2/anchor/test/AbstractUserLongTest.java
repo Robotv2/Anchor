@@ -227,4 +227,14 @@ public abstract class AbstractUserLongTest {
         Assertions.assertEquals(4, newRepo.findAll().size());
         Assertions.assertEquals(dob, newRepo.findById(4L).map(UserLongAdd::getDob).orElse(null));
     }
+
+    @Test
+    public void testQueryWithLimit() {
+        Assumptions.assumeTrue(repository instanceof Queryable, "Repository does not support querying.");
+        List<UserLong> limitedUsers = ((Queryable<Long, UserLong>) repository).query()
+                .limit(2)
+                .all();
+        Assertions.assertNotNull(limitedUsers);
+        Assertions.assertEquals(2, limitedUsers.size());
+    }
 }

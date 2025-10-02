@@ -6,6 +6,15 @@ import fr.robotv2.anchor.api.annotation.Id;
 import fr.robotv2.anchor.api.annotation.Index;
 import fr.robotv2.anchor.api.repository.Identifiable;
 
+/**
+ * Test fixture entity for Anchor ORM testing.
+ * <p>
+ * This entity is used throughout the Anchor test suite to verify ORM functionality
+ * across different database implementations (SQLite, MariaDB, JSON).
+ * </p>
+ *
+ * @since 1.0
+ */
 @Entity("users_long")
 public class UserLong implements Identifiable<Long> {
 
