@@ -3,7 +3,7 @@ package fr.robotv2.anchor.test;
 import fr.robotv2.anchor.api.database.Database;
 import fr.robotv2.anchor.api.repository.MigrationExecutor;
 import fr.robotv2.anchor.api.repository.Operator;
-import fr.robotv2.anchor.api.repository.Queryable;
+import fr.robotv2.anchor.api.repository.QueryableRepository;
 import fr.robotv2.anchor.api.repository.Repository;
 import fr.robotv2.anchor.test.model.UserLong;
 import fr.robotv2.anchor.test.model.UserLongAdd;
@@ -130,8 +130,8 @@ public abstract class AbstractUserLongTest {
 
     @Test
     void testQueryWithCondition() {
-        Assumptions.assumeTrue(repository instanceof Queryable, "Repository does not support querying.");
-        List<UserLong> admins = ((Queryable<Long, UserLong>) repository).query()
+        Assumptions.assumeTrue(repository instanceof QueryableRepository, "Repository does not support querying.");
+        List<UserLong> admins = ((QueryableRepository<Long, UserLong>) repository).query()
                 .where("group", Operator.EQUAL, "admin")
                 .all();
 
@@ -142,8 +142,8 @@ public abstract class AbstractUserLongTest {
 
     @Test
     void testQueryWithMultipleConditions() {
-        Assumptions.assumeTrue(repository instanceof Queryable, "Repository does not support querying.");
-        List<UserLong> result = ((Queryable<Long, UserLong>) repository).query()
+        Assumptions.assumeTrue(repository instanceof QueryableRepository, "Repository does not support querying.");
+        List<UserLong> result = ((QueryableRepository<Long, UserLong>) repository).query()
                 .where("active", Operator.EQUAL, true)
                 .where("age", Operator.GREATER_THAN, 30)
                 .all();
@@ -169,8 +169,8 @@ public abstract class AbstractUserLongTest {
 
     @Test
     void testQueryByNullField() {
-        Assumptions.assumeTrue(repository instanceof Queryable, "Repository does not support querying.");
-        List<UserLong> usersWithNoNickname = ((Queryable<Long, UserLong>) repository).query()
+        Assumptions.assumeTrue(repository instanceof QueryableRepository, "Repository does not support querying.");
+        List<UserLong> usersWithNoNickname = ((QueryableRepository<Long, UserLong>) repository).query()
                 .where("nickname", Operator.EQUAL, null)
                 .all();
 
@@ -181,8 +181,8 @@ public abstract class AbstractUserLongTest {
 
     @Test
     void testQueryDelete() {
-        Assumptions.assumeTrue(repository instanceof Queryable, "Repository does not support querying.");
-        int deletedCount = ((Queryable<Long, UserLong>) repository).query()
+        Assumptions.assumeTrue(repository instanceof QueryableRepository, "Repository does not support querying.");
+        int deletedCount = ((QueryableRepository<Long, UserLong>) repository).query()
                 .where("active", Operator.EQUAL, false)
                 .delete();
         Assertions.assertEquals(1, deletedCount);
@@ -195,8 +195,8 @@ public abstract class AbstractUserLongTest {
 
     @Test
     void testQueryAndAndOr() {
-        Assumptions.assumeTrue(repository instanceof Queryable, "Repository does not support querying.");
-        List<UserLong> result = ((Queryable<Long, UserLong>) repository).query()
+        Assumptions.assumeTrue(repository instanceof QueryableRepository, "Repository does not support querying.");
+        List<UserLong> result = ((QueryableRepository<Long, UserLong>) repository).query()
                 .where("group", Operator.EQUAL, "admin")
                 .or()
                 .where("group", Operator.EQUAL, "moderator")
@@ -230,8 +230,8 @@ public abstract class AbstractUserLongTest {
 
     @Test
     public void testQueryWithLimit() {
-        Assumptions.assumeTrue(repository instanceof Queryable, "Repository does not support querying.");
-        List<UserLong> limitedUsers = ((Queryable<Long, UserLong>) repository).query()
+        Assumptions.assumeTrue(repository instanceof QueryableRepository, "Repository does not support querying.");
+        List<UserLong> limitedUsers = ((QueryableRepository<Long, UserLong>) repository).query()
                 .limit(2)
                 .all();
         Assertions.assertNotNull(limitedUsers);

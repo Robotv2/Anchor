@@ -33,7 +33,7 @@ package fr.robotv2.anchor.api.repository;
  * @see Repository
  * @see Operator
  */
-public interface Queryable<ID, T extends Identifiable<ID>> {
+public interface QueryableRepository<ID, T extends Identifiable<ID>> extends Repository<ID, T> {
 
     /**
      * Creates a new QueryBuilder for constructing database queries.

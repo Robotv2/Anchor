@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Repository<ID, T>, Queryable<ID, T> {
+public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements QueryableRepository<ID, T> {
 
     protected final SQLDatabase database;
     protected final Class<T> cls;
