@@ -12,7 +12,15 @@ public class AnchorBukkit {
     public static final String JSON_PKG = "fr.robotv2.anchor.json.JsonDatabase";
     public static final String SQLITE_PKG = "fr.robotv2.anchor.sql.sqlite.SqliteDatabase";
     public static final String MARIADB_PKG = "fr.robotv2.anchor.sql.mariadb.MariaDBDatabase";
+    public static final String XLSX_PKG = "fr.robotv2.anchor.xlsx.XlsxDatabase";
 
+    /**
+     * Downloads and loads the necessary dependencies for Anchor based on the detected classes.
+     *
+     * @param plugin            The Bukkit plugin instance.
+     * @param directory         The directory where the libraries will be downloaded.
+     * @param relocationPrefix  The prefix to use for relocating the libraries to avoid conflicts.
+     */
     public static void downloadDependencies(Plugin plugin, String directory, String relocationPrefix) {
         final BukkitLibraryManager manager = new BukkitLibraryManager(plugin, directory);
         manager.addMavenCentral();
@@ -31,8 +39,19 @@ public class AnchorBukkit {
         if(classExists(MARIADB_PKG)) {
             loadMariadb(manager, relocationPrefix);
         }
+
+        if(classExists(XLSX_PKG)) {
+            loadXlsx(manager, relocationPrefix);
+        }
     }
 
+    /**
+     * Downloads and loads the necessary dependencies for Anchor based on the detected classes.
+     *
+     * @param plugin            The Bukkit plugin instance.
+     * @param directory         The directory where the libraries will be downloaded.
+     * @param relocationPrefix  The prefix to use for relocating the libraries to avoid conflicts.
+     */
     public static void downloadDependencies(Plugin plugin, File directory, String relocationPrefix) {
         downloadDependencies(plugin, directory.getAbsolutePath(), relocationPrefix);
     }
@@ -73,9 +92,19 @@ public class AnchorBukkit {
                 .groupId("com{}mysql")
                 .artifactId("mysql-connector-j")
                 .version("8.1.0")
-                .relocate("com{}mysql", relocationPrefix + "{}anchor{}mysql{}mysql-connector")
+                .relocate("com{}mysql", relocationPrefix + "{}anchor{}mariadb{}mysql-connector")
                 .build();
         manager.loadLibrary(connector);
+    }
+
+    private static void loadXlsx(LibraryManager manager, String relocationPrefix) {
+        final Library poi = Library.builder()
+                .groupId("org{}apache{}poi")
+                .artifactId("poi-ooxml")
+                .version("5.3.0")
+                .relocate("org{}apache{}poi", relocationPrefix + "{}anchor{}xlsx")
+                .build();
+        manager.loadLibrary(poi);
     }
 
     private static boolean classExists(String className) {
