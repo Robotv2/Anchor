@@ -9,35 +9,57 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.ref.SoftReference;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public class JsonRepository<ID, T extends Identifiable<ID>> implements Repository<ID, T> {
 
     private final JsonDatabase database;
     private final Class<T> cls;
-    private final EntityMetadata metadata;
+
+    private final String fileNameFormat;
+    private final Map<ID, SoftReference<T>> cache = new ConcurrentHashMap<>();
+    private volatile boolean directoryInitialized = false;
 
     public JsonRepository(JsonDatabase database, Class<T> cls) {
         this.database = database;
         this.cls = cls;
-        this.metadata = MetadataProcessor.getMetadata(cls);
+
+        EntityMetadata metadata = MetadataProcessor.getMetadata(cls);
+        this.fileNameFormat = metadata.getEntityName().toLowerCase() + "_%s.json";
     }
 
     @Override
     public void save(T entity) {
         Objects.requireNonNull(entity, "Entity cannot be null");
         final File file = resolveFile(entity.getId());
-        ensureFileExists(file);
-        try(final BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
+        final File tempFile = new File(file.getParentFile(), file.getName() + ".tmp");
+
+        ensureDirectoryExists();
+
+        try(final BufferedWriter writer = Files.newBufferedWriter(tempFile.toPath(), StandardCharsets.UTF_8)) {
             database.getGson().toJson(entity, writer);
         } catch (IOException exception) {
+            tempFile.delete();
             throw new RuntimeException("Failed to save entity with ID: " + entity.getId(), exception);
+        }
+
+        try {
+            Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            cache.put(entity.getId(), new SoftReference<>(entity));
+        } catch (IOException exception) {
+            tempFile.delete();
+            throw new RuntimeException("Failed to move temp file for entity: " + entity.getId(), exception);
         }
     }
 
@@ -48,9 +70,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
             return;
         }
 
-        for(T entity : entities) {
-            save(entity);
-        }
+        entities.forEach(this::save);
     }
 
     @Override
@@ -62,6 +82,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
     @Override
     public void deleteById(ID id) {
         Objects.requireNonNull(id, "ID cannot be null");
+        cache.remove(id);
         final File file = resolveFile(id);
         if (file.exists() && !file.delete()) {
             throw new RuntimeException("Failed to delete entity with ID: " + id);
@@ -75,9 +96,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
             return;
         }
 
-        for(T entity : entities) {
-            delete(entity);
-        }
+        entities.forEach(this::delete);
     }
 
     @Override
@@ -87,14 +106,21 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
             return;
         }
 
-        for(ID id : ids) {
-            deleteById(id);
-        }
+        ids.forEach(this::deleteById);
     }
 
     @Override
     public Optional<T> findById(ID id) {
-        Objects.requireNonNull(id, "ID cannot be null");
+        // Check cache first
+        SoftReference<T> ref = cache.get(id);
+        if (ref != null) {
+            T cached = ref.get();
+            if (cached != null) {
+                return Optional.of(cached);
+            }
+            cache.remove(id);
+        }
+
         final File file = resolveFile(id);
         if (!file.exists()) {
             return Optional.empty();
@@ -102,6 +128,9 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
 
         try(Reader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
             final T entity = database.getGson().fromJson(reader, cls);
+            if (entity != null) {
+                cache.put(id, new SoftReference<>(entity));
+            }
             return Optional.ofNullable(entity);
         } catch (IOException exception) {
             throw new RuntimeException("Failed to read entity with ID: " + id, exception);
@@ -115,40 +144,46 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
             return List.of();
         }
 
-        final File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
-        if (files == null || files.length == 0) {
-            return List.of();
+        try (Stream<Path> paths = Files.list(dir.toPath())) {
+            return paths.filter(path -> path.toString().endsWith(".json")).map(this::readEntityFromFile).toList();
+        } catch (IOException exception) {
+            throw new RuntimeException("Failed to list directory", exception);
         }
-
-        return Stream.of(files).map(file -> {
-            try(Reader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
-                return database.getGson().fromJson(reader, cls);
-            } catch (IOException exception) {
-                throw new RuntimeException("Failed to read entity from file: " + file.getName(), exception);
-            }
-        }).toList();
     }
 
     public File resolveFile(ID id) {
-        Objects.requireNonNull(id, "ID cannot be null");
-        final String format = "%s_%s.json";
-        return new File(database.getFile(),
-                String.format(
-                        format,
-                        metadata.getEntityName().toLowerCase(),
-                        id
-                )
-        );
+        return new File(database.getFile(), String.format(fileNameFormat, id));
     }
 
-    private void ensureFileExists(File file) {
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            try {
-                file.createNewFile();
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to create file: " + file.getPath(), e);
+    public void clearCache() {
+        cache.clear();
+    }
+
+    public void evictCache(ID id) {
+        cache.remove(id);
+    }
+
+    private void ensureDirectoryExists() {
+        // Double-checked locking for thread safety
+        if (!directoryInitialized) {
+            synchronized (this) {
+                if (!directoryInitialized) {
+                    database.getFile().mkdirs();
+                    directoryInitialized = true;
+                }
             }
+        }
+    }
+
+    private T readEntityFromFile(Path path) {
+        try(Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            T entity = database.getGson().fromJson(reader, cls);
+            if (entity != null) {
+                cache.put(entity.getId(), new SoftReference<>(entity));
+            }
+            return entity;
+        } catch (IOException exception) {
+            throw new RuntimeException("Failed to read entity from file: " + path.getFileName(), exception);
         }
     }
 }
