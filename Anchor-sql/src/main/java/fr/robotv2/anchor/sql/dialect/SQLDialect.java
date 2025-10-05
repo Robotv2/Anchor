@@ -4,7 +4,9 @@ import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.FieldMetadata;
 import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Operator;
+import fr.robotv2.anchor.api.util.BlobSerializationUtility;
 
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -316,6 +318,16 @@ public interface SQLDialect {
                 return ((java.sql.Time) v).toLocalTime();
             }
             return LocalTime.parse(v.toString());
+        }
+
+        if(v instanceof java.sql.Blob) {
+            try {
+                final byte[] bytes = ((java.sql.Blob) v).getBytes(1, (int) ((java.sql.Blob) v).length());
+                final Object val = BlobSerializationUtility.deserialize(bytes, targetType);
+                return targetType.cast(val);
+            } catch (SQLException exception) {
+                throw new RuntimeException("Failed to read BLOB data", exception);
+            }
         }
 
         if (targetType == String.class) {

@@ -3,6 +3,7 @@ package fr.robotv2.anchor.api.metadata;
 import fr.robotv2.anchor.api.annotation.Column;
 import fr.robotv2.anchor.api.annotation.Entity;
 import fr.robotv2.anchor.api.annotation.Id;
+import fr.robotv2.anchor.api.util.BlobSerializationUtility;
 import fr.robotv2.anchor.api.annotation.Index;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -187,7 +188,11 @@ public class EntityMetadata {
     public Map<String, Object> extract(Object value) {
         final Map<String, Object> values = new LinkedHashMap<>();
         for (FieldMetadata fm : getAllFields().values()) {
-            values.put(fm.getColumnName().toLowerCase(), fm.safeGet(value));
+            Object fieldValue = fm.safeGet(value);
+            if (fm.isBlob()) {
+                fieldValue = BlobSerializationUtility.serialize(fieldValue);
+            }
+            values.put(fm.getColumnName().toLowerCase(), fieldValue);
         }
         return values;
     }

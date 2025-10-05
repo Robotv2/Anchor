@@ -6,6 +6,7 @@ import fr.robotv2.anchor.api.annotation.Id;
 import fr.robotv2.anchor.api.repository.Identifiable;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -22,6 +23,9 @@ public class UserLongBlob implements Identifiable<UUID> {
     public UserLongBlob(UUID id) {
         this.id = id;
         this.blob = new BlobClass();
+    }
+
+    public UserLongBlob() {
     }
 
     @Override
@@ -41,10 +45,21 @@ public class UserLongBlob implements Identifiable<UUID> {
 
         private final double doubleValue;
 
-        public BlobClass(int value, long longValue, double doubleValue) {
+        private final BlobEnum enumValue;
+
+        private final Map<Integer, BlobEnum> map = Map.of(
+                1, BlobEnum.ONE,
+                2, BlobEnum.TWO,
+                3, BlobEnum.THREE,
+                4, BlobEnum.FOUR,
+                5, BlobEnum.FIVE
+        );
+
+        public BlobClass(int value, long longValue, double doubleValue, BlobEnum enumValue) {
             this.value = value;
             this.longValue = longValue;
             this.doubleValue = doubleValue;
+            this.enumValue = enumValue;
         }
 
         public BlobClass() {
@@ -52,6 +67,7 @@ public class UserLongBlob implements Identifiable<UUID> {
             this.value = random.nextInt();
             this.longValue = random.nextLong();
             this.doubleValue = random.nextDouble();
+            this.enumValue = BlobEnum.random(random);
         }
 
         public int getValue() {
@@ -64,6 +80,29 @@ public class UserLongBlob implements Identifiable<UUID> {
 
         public double getDoubleValue() {
             return doubleValue;
+        }
+
+        public BlobEnum getEnumValue() {
+            return enumValue;
+        }
+
+        public Map<Integer, BlobEnum> getMap() {
+            return map;
+        }
+    }
+
+    public enum BlobEnum {
+
+        ONE,
+        TWO,
+        THREE,
+        FOUR,
+        FIVE,
+        ;
+
+        public static BlobEnum random(Random random) {
+            final BlobEnum[] values = values();
+            return values[random.nextInt(values.length)];
         }
     }
 }

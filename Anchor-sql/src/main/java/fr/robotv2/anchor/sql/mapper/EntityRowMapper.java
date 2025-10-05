@@ -3,6 +3,8 @@ package fr.robotv2.anchor.sql.mapper;
 import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.FieldAccessor;
 import fr.robotv2.anchor.api.metadata.FieldMetadata;
+import fr.robotv2.anchor.api.util.BlobSerializationUtility;
+import fr.robotv2.anchor.api.util.DummyBlob;
 import fr.robotv2.anchor.sql.dialect.SQLDialect;
 
 import java.sql.ResultSet;
@@ -30,7 +32,7 @@ public class EntityRowMapper<T> implements RowMapper<T> {
 
     private record MapperPlan(List<FieldSetter> fieldSetters) {}
 
-    private record FieldSetter(FieldAccessor accessor, int columnIndex) {}
+    private record FieldSetter(FieldAccessor accessor, int columnIndex, FieldMetadata fm) {}
 
     @Override
     public T map(ResultSet rs) throws SQLException {
@@ -47,9 +49,15 @@ public class EntityRowMapper<T> implements RowMapper<T> {
         try {
             final T instance = metadata.newInstance();
             for (final FieldSetter setter : mapperPlan.fieldSetters()) {
-                final Object dbVal = rs.getObject(setter.columnIndex());
-                final Object javaVal = dialect.fromDatabaseValue(dbVal, setter.accessor().getFieldType());
-                setter.accessor().set(instance, javaVal);
+                Object dbVal = rs.getObject(setter.columnIndex());
+
+                if(setter.fm().isBlob() && dbVal instanceof byte[] bytes) {
+                    // pass it into the DummyBlob to avoid issues with some implementations
+                    dbVal = new DummyBlob(bytes);
+                }
+
+                final Object finalValue = dialect.fromDatabaseValue(dbVal, setter.accessor().getFieldType());
+                setter.accessor().set(instance, finalValue);
             }
             return instance;
         } catch (Throwable throwable) {
@@ -65,7 +73,7 @@ public class EntityRowMapper<T> implements RowMapper<T> {
             final String columnName = fm.getColumnName();
             final Integer columnIndex = columnIndexes.get(columnName.toLowerCase());
             if (columnIndex != null) {
-                fieldSetters.add(new FieldSetter(fm.getAccessor(), columnIndex));
+                fieldSetters.add(new FieldSetter(fm.getAccessor(), columnIndex, fm));
             }
         }
         return new MapperPlan(fieldSetters);

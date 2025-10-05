@@ -179,7 +179,7 @@ public class SqliteDialect implements SQLDialect {
     private String getColumnDefinition(FieldMetadata fm, boolean isId) {
         final Column column = fm.getColumn();
         final Field field = fm.getField();
-        final ColumnType type = ColumnType.fromJavaClass(field.getType());
+        final ColumnType type = ColumnType.fromJavaClass(field.getType(), fm);
         final String sqlType = column.rawType().isEmpty() ? getSqlType(type) : column.rawType();
         String def = quoteIdentifier(column.value()) + " " + sqlType + (isId ? " PRIMARY KEY" : "");
         if (!column.nullable()) {

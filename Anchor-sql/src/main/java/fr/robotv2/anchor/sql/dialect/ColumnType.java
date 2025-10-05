@@ -1,5 +1,7 @@
 package fr.robotv2.anchor.sql.dialect;
 
+import fr.robotv2.anchor.api.metadata.FieldMetadata;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -25,7 +27,7 @@ public enum ColumnType {
     TEXT,
     ;
 
-    public static ColumnType fromJavaClass(Class<?> clazz) {
+    public static ColumnType fromJavaClass(Class<?> clazz, FieldMetadata fm) {
         if (clazz == null) return null;
 
         // Primitive and wrapper integers
@@ -64,14 +66,10 @@ public enum ColumnType {
         if (LocalDate.class.isAssignableFrom(clazz)) return DATE;
 
         // Binary
-        if (clazz == byte[].class || clazz == Byte[].class) return BLOB;
+        if (clazz == byte[].class || clazz == Byte[].class || fm.isBlob()) return BLOB;
 
         // Fallback to VARCHAR for unknown types
         return VARCHAR;
-    }
-
-    public static ColumnType fromValue(Object value) {
-        return (value == null) ? null : fromJavaClass(value.getClass());
     }
 
     public boolean isNumeric() {

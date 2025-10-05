@@ -208,13 +208,14 @@ public class MariaDBDialect implements SQLDialect {
                 // Fall through to defaults if it isn't the typical MariaDB format
             }
         }
+
         return SQLDialect.super.fromDatabaseValue(v, targetType);
     }
 
     private String getColumnDefinition(FieldMetadata fm, boolean isId) {
         final Column column = fm.getColumn();
         final Field field = fm.getField();
-        final ColumnType type = ColumnType.fromJavaClass(field.getType());
+        final ColumnType type = ColumnType.fromJavaClass(field.getType(), fm);
         final String sqlType = column.rawType().isEmpty() ? getSqlType(type) : column.rawType();
         StringBuilder def = new StringBuilder();
         def.append(quoteIdentifier(column.value())).append(" ").append(sqlType);

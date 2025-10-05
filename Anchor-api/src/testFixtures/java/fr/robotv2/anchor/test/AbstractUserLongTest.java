@@ -247,10 +247,13 @@ public abstract class AbstractUserLongTest {
         UserLongBlob blobUser = new UserLongBlob(UUID.randomUUID());
         blobRepository.save(blobUser);
         UserLongBlob retrieved = blobRepository.findById(blobUser.getId()).orElse(null);
+
         Assertions.assertNotNull(retrieved);
         Assertions.assertNotNull(retrieved.getBlob());
         Assertions.assertEquals(blobUser.getBlob().getValue(), retrieved.getBlob().getValue());
         Assertions.assertEquals(blobUser.getBlob().getLongValue(), retrieved.getBlob().getLongValue());
         Assertions.assertEquals(blobUser.getBlob().getDoubleValue(), retrieved.getBlob().getDoubleValue());
+        Assertions.assertEquals(blobUser.getBlob().getEnumValue(), retrieved.getBlob().getEnumValue());
+        Assertions.assertEquals(blobUser.getBlob().getMap(), retrieved.getBlob().getMap());
     }
 }
