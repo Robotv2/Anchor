@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -30,6 +31,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
 
     @Override
     public void save(T entity) {
+        Objects.requireNonNull(entity, "Entity cannot be null");
         final File file = resolveFile(entity.getId());
         ensureFileExists(file);
         try(final BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
@@ -41,6 +43,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
 
     @Override
     public void saveAll(Collection<T> entities) {
+        Objects.requireNonNull(entities, "Entities collection cannot be null");
         if(entities.isEmpty()) {
             return;
         }
@@ -52,11 +55,13 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
 
     @Override
     public void delete(T entity) {
+        Objects.requireNonNull(entity, "Entity cannot be null");
         deleteById(entity.getId());
     }
 
     @Override
     public void deleteById(ID id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         final File file = resolveFile(id);
         if (file.exists() && !file.delete()) {
             throw new RuntimeException("Failed to delete entity with ID: " + id);
@@ -65,6 +70,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
 
     @Override
     public void deleteAll(Collection<T> entities) {
+        Objects.requireNonNull(entities, "Entities collection cannot be null");
         if(entities.isEmpty()) {
             return;
         }
@@ -76,6 +82,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
 
     @Override
     public void deleteAllById(Collection<ID> ids) {
+        Objects.requireNonNull(ids, "IDs collection cannot be null");
         if(ids.isEmpty()) {
             return;
         }
@@ -87,6 +94,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
 
     @Override
     public Optional<T> findById(ID id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         final File file = resolveFile(id);
         if (!file.exists()) {
             return Optional.empty();
@@ -122,6 +130,7 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
     }
 
     public File resolveFile(ID id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         final String format = "%s_%s.json";
         return new File(database.getFile(),
                 String.format(

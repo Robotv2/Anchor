@@ -6,10 +6,7 @@ import fr.robotv2.anchor.api.repository.*;
 import fr.robotv2.anchor.sql.database.SQLDatabase;
 
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,6 +44,7 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
 
     @Override
     public void save(T entity) {
+        Objects.requireNonNull(entity, "Entity cannot be null");
         final String upsert = database.getDialect().getUpsertSql(metadata);
         final Collection<Object> values = metadata.extract(entity).values();
 
@@ -59,6 +57,7 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
 
     @Override
     public void saveAll(Collection<T> entities) {
+        Objects.requireNonNull(entities, "Entities collection cannot be null");
         if(entities.isEmpty()) {
             return;
         }
@@ -75,16 +74,19 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
 
     @Override
     public void delete(T entity) {
+        Objects.requireNonNull(entity, "Entity cannot be null");
         deleteById(entity.getId());
     }
 
     @Override
     public void deleteById(ID id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         query().where(metadata.getIdField().getColumnName(), Operator.EQUAL, id).delete();
     }
 
     @Override
     public void deleteAll(Collection<T> entities) {
+        Objects.requireNonNull(entities, "Entities collection cannot be null");
         if(entities.isEmpty()) {
             return;
         }
@@ -95,6 +97,7 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
 
     @Override
     public void deleteAllById(Collection<ID> ids) {
+        Objects.requireNonNull(ids, "IDs collection cannot be null");
         if(ids.isEmpty()) {
             return;
         }
@@ -106,6 +109,7 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
 
     @Override
     public Optional<T> findById(ID id) {
+        Objects.requireNonNull(id, "ID cannot be null");
         if(id == null) {
             return Optional.empty();
         }
