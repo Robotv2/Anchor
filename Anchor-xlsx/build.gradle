@@ -1,8 +1,0 @@
-dependencies {
-    api project(':Anchor-api')
-
-    compileOnly 'org.apache.poi:poi-ooxml:5.3.0'
-    testImplementation 'org.apache.poi:poi-ooxml:5.3.0'
-
-    testImplementation testFixtures(project(':Anchor-api'))
-}

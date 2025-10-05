@@ -39,10 +39,6 @@ public class AnchorBukkit {
         if(classExists(MARIADB_PKG)) {
             loadMariadb(manager, relocationPrefix);
         }
-
-        if(classExists(XLSX_PKG)) {
-            loadXlsx(manager, relocationPrefix);
-        }
     }
 
     /**
@@ -95,16 +91,6 @@ public class AnchorBukkit {
                 .relocate("com{}mysql", relocationPrefix + "{}anchor{}mariadb{}mysql-connector")
                 .build();
         manager.loadLibrary(connector);
-    }
-
-    private static void loadXlsx(LibraryManager manager, String relocationPrefix) {
-        final Library poi = Library.builder()
-                .groupId("org{}apache{}poi")
-                .artifactId("poi-ooxml")
-                .version("5.3.0")
-                .relocate("org{}apache{}poi", relocationPrefix + "{}anchor{}xlsx")
-                .build();
-        manager.loadLibrary(poi);
     }
 
     private static boolean classExists(String className) {
