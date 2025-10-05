@@ -23,18 +23,20 @@ import java.lang.reflect.Field;
 public class FieldMetadata {
 
     private final Column column;
-
     private final Field field;
+    private final FieldAccessor accessor; // Add this
 
     /**
      * Creates FieldMetadata for a field with its column annotation.
      *
      * @param column the Column annotation for this field, must not be {@code null}
      * @param field the Java Field reference, must not be {@code null}
+     * @param accessor the efficient field accessor, must not be {@code null}
      */
-    public FieldMetadata(Column column, Field field) {
+    public FieldMetadata(Column column, Field field, FieldAccessor accessor) {
         this.column = column;
         this.field = field;
+        this.accessor = accessor;
     }
 
     /**
@@ -99,12 +101,20 @@ public class FieldMetadata {
     }
 
     /**
-     * Safely gets the field value from an entity instance.
+     * Returns the efficient field accessor for this metadata.
      * <p>
-     * This method uses reflection to get the field value and handles any
-     * {@link IllegalAccessException} by wrapping it in a {@link RuntimeException}.
-     * The field is made accessible during metadata creation.
+     * The accessor provides high-performance field access using MethodHandles.
      * </p>
+     *
+     * @return the field accessor, never {@code null}
+     */
+    @NotNull
+    public FieldAccessor getAccessor() {
+        return accessor;
+    }
+
+    /**
+     * Safely gets the field value from an entity instance using the efficient accessor.
      *
      * @param instance the entity instance to get the value from, must not be {@code null}
      * @return the field value, may be {@code null}
@@ -112,12 +122,19 @@ public class FieldMetadata {
      * @apiNote This method is intended for internal framework use
      */
     @Nullable
-    @ApiStatus.Internal
-    Object safeGet(@NotNull Object instance) {
-        try {
-            return field.get(instance);
-        } catch (IllegalAccessException exception) {
-            throw new RuntimeException("Failed to get value for field: " + field.getName(), exception);
-        }
+    public Object safeGet(@NotNull Object instance) {
+        return accessor.get(instance);
+    }
+
+    /**
+     * Safely sets the field value on an entity instance using the efficient accessor.
+     *
+     * @param instance the entity instance to set the value on, must not be {@code null}
+     * @param value the value to set, may be {@code null}
+     * @throws RuntimeException if the field cannot be accessed
+     * @apiNote This method is intended for internal framework use
+     */
+    public void safeSet(@NotNull Object instance, @Nullable Object value) {
+        accessor.set(instance, value);
     }
 }

@@ -39,7 +39,7 @@ public class MetadataProcessor {
      * <p>
      * This method provides thread-safe access to entity metadata with automatic
      * caching. The first call for a particular class will compute the metadata
-     * using {@link EntityMetadata#create(Class)} and cache the result. Subsequent
+     * using {@link MetadataFactory#create(Class)} and cache the result. Subsequent
      * calls will return the cached instance, improving performance.
      * </p>
      *
@@ -50,10 +50,10 @@ public class MetadataProcessor {
      * @return cached EntityMetadata for the specified class, never {@code null}
      * @throws IllegalArgumentException if cls is {@code null}
      * @throws IllegalArgumentException if the class is not properly annotated as an entity
-     * @see EntityMetadata#create(Class)
+     * @see MetadataFactory#create(Class)
      */
     @NotNull
     public static EntityMetadata getMetadata(@NotNull Class<?> cls) {
-        return cache.computeIfAbsent(cls, (ignored) -> EntityMetadata.create(cls));
+        return cache.computeIfAbsent(cls, (ignored) -> MetadataFactory.create(cls));
     }
 }

@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * Metadata and structural information about an entity class.
@@ -31,20 +31,19 @@ import java.util.*;
 public class EntityMetadata {
 
     private final Entity entity;
-
     private final Id id;
-
     private final FieldMetadata idField;
-
     private final Map<String, FieldMetadata> fields;
     private final List<IndexMetadata> indexes;
+    private final Supplier<?> instanceSupplier;
 
-    private EntityMetadata(Entity entity, Id id, FieldMetadata idField, Map<String, FieldMetadata> fields, List<IndexMetadata> indexes) {
+    EntityMetadata(Entity entity, Id id, FieldMetadata idField, Map<String, FieldMetadata> fields, List<IndexMetadata> indexes, Supplier<?> instanceSupplier) {
         this.entity = entity;
         this.id = id;
         this.idField = idField;
         this.fields = fields;
         this.indexes = indexes;
+        this.instanceSupplier = instanceSupplier;
     }
 
     /**
@@ -194,94 +193,23 @@ public class EntityMetadata {
     }
 
     /**
-     * Creates EntityMetadata for the specified entity class.
+     * Creates a new instance of the entity class.
      * <p>
-     * This static factory method analyzes the given class and extracts all the
-     * necessary metadata information including annotations, field mappings,
-     * and index definitions. The class must be properly annotated with
-     * {@link Entity} and have exactly one field annotated with both {@link Id}
-     * and {@link Column}.
+     * Uses an efficient instance factory created with LambdaMetafactory
+     * for optimal performance.
      * </p>
      *
-     * <p><strong>Validation performed:</strong></p>
-     * <ul>
-     *   <li>Class must be annotated with @Entity</li>
-     *   <li>Exactly one field must be annotated with @Id</li>
-     *   <li>The @Id field must also be annotated with @Column</li>
-     *   <li>Column names must be unique (case-insensitive)</li>
-     * </ul>
-     *
-     * @param cls the entity class to analyze, must not be {@code null}
-     * @return EntityMetadata containing all information about the entity
-     * @throws IllegalArgumentException if the class is not properly annotated
-     * @throws IllegalArgumentException if multiple @Id fields are found
-     * @throws IllegalArgumentException if no @Id field is found
-     * @throws IllegalArgumentException if @Id field is not annotated with @Column
+     * @param <T> the entity type
+     * @return a new instance of the entity
+     * @throws RuntimeException if instance creation fails
      */
-    public static EntityMetadata create(Class<?> cls) {
-        if (!cls.isAnnotationPresent(Entity.class)) {
-            throw new IllegalArgumentException("Class " + cls.getName() + " must be annotated with @Entity");
-        }
-
-        final Entity entity = cls.getAnnotation(Entity.class);
-        final Map<String, FieldMetadata> fields = new LinkedHashMap<>();
-        final List<IndexMetadata> indexes = new ArrayList<>();
-
-        FieldMetadata idField = null;
-        Id id = null;
-
-        for (Field field : cls.getDeclaredFields()) {
-            field.setAccessible(true);
-
-            if (field.isAnnotationPresent(Id.class)) {
-                if (idField != null) {
-                    throw new IllegalArgumentException("Only one @Id allowed per entity");
-                }
-                if(!field.isAnnotationPresent(Column.class)) {
-                    throw new IllegalArgumentException("Id field must be annotated with @Column");
-                }
-
-                idField = new FieldMetadata(field.getAnnotation(Column.class), field);
-                id = field.getAnnotation(Id.class);
-                continue;
-            }
-
-            if (field.isAnnotationPresent(Column.class)) {
-                Column colAnn = field.getAnnotation(Column.class);
-                fields.put(colAnn.value().toLowerCase(), new FieldMetadata(colAnn, field));
-            }
-        }
-
-        if (idField == null) {
-            throw new IllegalArgumentException("Entity must have one @Id field");
-        }
-
-        processEntityIndexes(cls, indexes);
-        processFieldIndexes(cls, indexes);
-
-        return new EntityMetadata(entity, id, idField, fields, indexes);
-    }
-
-    private static void processEntityIndexes(Class<?> cls, List<IndexMetadata> indexes) {
-        if (cls.isAnnotationPresent(Index.class)) {
-            Index indexAnnotation = cls.getAnnotation(Index.class);
-            String entityName = cls.getAnnotation(Entity.class).value();
-            String defaultIndexName = "idx_" + entityName;
-            IndexMetadata indexMetadata = IndexMetadata.fromAnnotation(indexAnnotation, defaultIndexName, new ArrayList<>());
-            indexes.add(indexMetadata);
-        }
-    }
-
-    private static void processFieldIndexes(Class<?> cls, List<IndexMetadata> indexes) {
-        for (Field field : cls.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Index.class) && field.isAnnotationPresent(Column.class)) {
-                Index indexAnnotation = field.getAnnotation(Index.class);
-                Column columnAnnotation = field.getAnnotation(Column.class);
-                String entityName = cls.getAnnotation(Entity.class).value();
-                String defaultIndexName = "idx_" + entityName + "_" + columnAnnotation.value();
-                IndexMetadata indexMetadata = IndexMetadata.fromAnnotation(indexAnnotation, defaultIndexName, List.of(columnAnnotation.value()));
-                indexes.add(indexMetadata);
-            }
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public <T> T newInstance() {
+        try {
+            return (T) instanceSupplier.get();
+        } catch (Exception exception) {
+            throw new RuntimeException("Failed to create new entity instance", exception);
         }
     }
 }
