@@ -60,4 +60,21 @@ public @interface Column {
      * @return the raw SQL type definition, or empty string to use automatic type detection
      */
     String rawType() default "";
+
+    /**
+     * Indicates if this column should be treated as a BLOB (Binary Large Object).
+     * <p>
+     * When set to {@code true}, the field will be serialized to a byte array
+     * for storage in the database and deserialized back into the original object
+     * when retrieved. This is useful for storing complex objects that do not
+     * map directly to standard SQL types.
+     * </p>
+     * <p>
+     * Note that using BLOBs may have performance implications and can complicate
+     * querying. Use this option judiciously for fields that truly require it.
+     * </p>
+     *
+     * @return {@code true} if the column is a BLOB, {@code false} otherwise
+     */
+    boolean blob() default false;
 }

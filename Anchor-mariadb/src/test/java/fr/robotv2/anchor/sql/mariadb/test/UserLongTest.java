@@ -17,7 +17,7 @@ public class UserLongTest extends AbstractUserLongTest {
     }
 
     @Override
-    protected void onRepositoryReady(Repository<Long, UserLong> repository) {
+    protected void onRepositoryReady(Repository<?, ?> repository) {
         ((SQLRepository<?, ?>) repository).createTableIfNotExists();
     }
 

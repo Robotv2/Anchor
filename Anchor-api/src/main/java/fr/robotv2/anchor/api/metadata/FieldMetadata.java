@@ -91,6 +91,18 @@ public class FieldMetadata {
     }
 
     /**
+     * Returns whether this column is a BLOB type.
+     * <p>
+     * This corresponds to the {@code blob} property of the {@link Column} annotation.
+     * </p>
+     *
+     * @return {@code true} if the column is a BLOB, {@code false} otherwise
+     */
+    public boolean isBlob() {
+        return column.blob();
+    }
+
+    /**
      * Returns the Java Field reference for this metadata.
      *
      * @return the Field object, never {@code null}

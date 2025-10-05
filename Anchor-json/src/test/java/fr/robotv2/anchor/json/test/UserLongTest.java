@@ -20,11 +20,6 @@ public class UserLongTest extends AbstractUserLongTest {
         return new JsonDatabase(tempDir.toFile());
     }
 
-    @Override
-    protected void onRepositoryReady(Repository<Long, UserLong> repository) {
-        // Nothing to do
-    }
-
     @Test
     public void testNamingStrategy() {
         Assumptions.assumeTrue(database instanceof JsonDatabase, "Database is not a JsonDatabase");

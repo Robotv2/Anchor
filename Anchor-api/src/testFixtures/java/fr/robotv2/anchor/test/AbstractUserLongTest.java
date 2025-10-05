@@ -7,6 +7,7 @@ import fr.robotv2.anchor.api.repository.QueryableRepository;
 import fr.robotv2.anchor.api.repository.Repository;
 import fr.robotv2.anchor.test.model.UserLong;
 import fr.robotv2.anchor.test.model.UserLongAdd;
+import fr.robotv2.anchor.test.model.UserLongBlob;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
+import java.util.UUID;
 
 public abstract class AbstractUserLongTest {
 
@@ -29,7 +31,7 @@ public abstract class AbstractUserLongTest {
 
     protected abstract Database createDatabase(Path tempDir);
 
-    protected void onRepositoryReady(Repository<Long, UserLong> repository) {}
+    protected void onRepositoryReady(Repository<?, ?> repository) {}
 
     protected void onTearDown(Database database, Repository<Long, UserLong> repository) { }
 
@@ -236,5 +238,19 @@ public abstract class AbstractUserLongTest {
                 .all();
         Assertions.assertNotNull(limitedUsers);
         Assertions.assertEquals(2, limitedUsers.size());
+    }
+
+    @Test
+    public void testBlob() {
+        Repository<UUID, UserLongBlob> blobRepository = database.getRepository(UserLongBlob.class);
+        onRepositoryReady(blobRepository);
+        UserLongBlob blobUser = new UserLongBlob(UUID.randomUUID());
+        blobRepository.save(blobUser);
+        UserLongBlob retrieved = blobRepository.findById(blobUser.getId()).orElse(null);
+        Assertions.assertNotNull(retrieved);
+        Assertions.assertNotNull(retrieved.getBlob());
+        Assertions.assertEquals(blobUser.getBlob().getValue(), retrieved.getBlob().getValue());
+        Assertions.assertEquals(blobUser.getBlob().getLongValue(), retrieved.getBlob().getLongValue());
+        Assertions.assertEquals(blobUser.getBlob().getDoubleValue(), retrieved.getBlob().getDoubleValue());
     }
 }
