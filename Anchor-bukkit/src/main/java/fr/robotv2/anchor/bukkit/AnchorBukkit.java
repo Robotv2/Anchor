@@ -3,41 +3,44 @@ package fr.robotv2.anchor.bukkit;
 import com.alessiodp.libby.BukkitLibraryManager;
 import com.alessiodp.libby.Library;
 import com.alessiodp.libby.LibraryManager;
+import fr.robotv2.anchor.api.database.Database;
+import fr.robotv2.anchor.json.JsonDatabase;
+import fr.robotv2.anchor.sql.mariadb.MariaDBConfiguration;
+import fr.robotv2.anchor.sql.mariadb.MariaDBDatabase;
+import fr.robotv2.anchor.sql.sqlite.SqliteDatabase;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.lang.module.Configuration;
 
 public class AnchorBukkit {
 
     public static final String JSON_PKG = "fr.robotv2.anchor.json.JsonDatabase";
     public static final String SQLITE_PKG = "fr.robotv2.anchor.sql.sqlite.SqliteDatabase";
     public static final String MARIADB_PKG = "fr.robotv2.anchor.sql.mariadb.MariaDBDatabase";
-    public static final String XLSX_PKG = "fr.robotv2.anchor.xlsx.XlsxDatabase";
 
     /**
      * Downloads and loads the necessary dependencies for Anchor based on the detected classes.
      *
      * @param plugin            The Bukkit plugin instance.
      * @param directory         The directory where the libraries will be downloaded.
-     * @param relocationPrefix  The prefix to use for relocating the libraries to avoid conflicts.
      */
-    public static void downloadDependencies(Plugin plugin, String directory, String relocationPrefix) {
+    public static void downloadDependencies(Plugin plugin, String directory) {
         final BukkitLibraryManager manager = new BukkitLibraryManager(plugin, directory);
         manager.addMavenCentral();
         manager.addJitPack();
 
-        relocationPrefix = relocationPrefix.replace(".", "{}");
-
-        if(classExists(JSON_PKG)) {
-            loadJson(manager, relocationPrefix);
+        if(isJsonAvailable()) {
+            loadJson(manager);
         }
 
-        if(classExists(SQLITE_PKG)) {
-            loadSqlite(manager, relocationPrefix);
+        if(isSqliteAvailable()) {
+            loadSqlite(manager);
         }
 
-        if(classExists(MARIADB_PKG)) {
-            loadMariadb(manager, relocationPrefix);
+        if(isMariadbAvailable()) {
+            loadMariadb(manager);
         }
     }
 
@@ -46,13 +49,87 @@ public class AnchorBukkit {
      *
      * @param plugin            The Bukkit plugin instance.
      * @param directory         The directory where the libraries will be downloaded.
-     * @param relocationPrefix  The prefix to use for relocating the libraries to avoid conflicts.
      */
-    public static void downloadDependencies(Plugin plugin, File directory, String relocationPrefix) {
-        downloadDependencies(plugin, directory.getAbsolutePath(), relocationPrefix);
+    public static void downloadDependencies(Plugin plugin, File directory) {
+        downloadDependencies(plugin, directory.getAbsolutePath());
     }
 
-    private static void loadJson(LibraryManager manager, String relocationPrefix) {
+    /**
+     * Checks if the JSON database class is available.
+     * @return
+     */
+    public static boolean isJsonAvailable() {
+        return classExists(JSON_PKG);
+    }
+
+    /**
+     * Checks if the SQLite database class is available.
+     * @return
+     */
+    public static boolean isSqliteAvailable() {
+        return classExists(SQLITE_PKG);
+    }
+
+    /**
+     * Checks if the MariaDB database class is available.
+     * @return
+     */
+    public static boolean isMariadbAvailable() {
+        return classExists(MARIADB_PKG);
+    }
+
+    /**
+     * Resolves a Database instance based on the provided configuration section.
+     *
+     * Supported types:
+     * - json: Uses JsonDatabase. Configuration options: file (default: data.json)
+     * - sqlite/sqlite3: Uses SqliteDatabase. Configuration options: file (default: data.database)
+     * - mariadb/mysql: Uses MariaDBDatabase. Configuration options: host (default: localhost), port (default: 3306),
+     *   database (default: anchor), username (default: root), password (default: empty)
+     *
+     * @param plugin The Bukkit plugin instance.
+     * @param section The configuration section containing database settings.
+     * @return A Database instance based on the configuration.
+     * @throws IllegalArgumentException If the database type is unknown or required classes are missing.
+     */
+    public static Database resolveDatabase(Plugin plugin, ConfigurationSection section) {
+        final String type = section.getString("type", "json").toLowerCase();
+        return switch (type) {
+
+            case "json" -> {
+                if(!isJsonAvailable()) {
+                    throw new IllegalStateException("JsonDatabase class not found. Please include the JSON module.");
+                }
+                final String filename = section.getString("file", "data.json");
+                yield new JsonDatabase(new File(plugin.getDataFolder(), filename));
+            }
+
+            case "sqlite", "sqlite3" -> {
+                if(!isSqliteAvailable()) {
+                    throw new IllegalStateException("SqliteDatabase class not found. Please include the SQLite module.");
+                }
+                final String filename = section.getString("file", "data.database");
+                yield new SqliteDatabase(new File(plugin.getDataFolder(), filename));
+            }
+
+            case "mariadb", "mysql" -> {
+                if(!isMariadbAvailable()) {
+                    throw new IllegalStateException("MariaDBDatabase class not found. Please include the MariaDB module.");
+                }
+                final String host = section.getString("host", "localhost");
+                final int port = section.getInt("port", 3306);
+                final String database = section.getString("database", "anchor");
+                final String username = section.getString("username", "root");
+                final String password = section.getString("password", "");
+                final MariaDBConfiguration configuration = new MariaDBConfiguration(host, port, database, username, password);
+                yield new MariaDBDatabase(configuration);
+            }
+
+            default -> throw new IllegalArgumentException("Unknown database type: " + type);
+        };
+    }
+
+    private static void loadJson(LibraryManager manager) {
         if(classExists("com.google.gson.Gson")) {
             return; // Gson already exists
         }
@@ -61,34 +138,37 @@ public class AnchorBukkit {
                 .groupId("com{}google{}code{}gson")
                 .artifactId("gson")
                 .version("2.10.1")
-                .relocate("com{}google{}gson", relocationPrefix + "{}anchor{}gson")
                 .build();
         manager.loadLibrary(gson);
     }
 
-    private static void loadSqlite(LibraryManager manager, String relocationPrefix) {
+    private static void loadSqlite(LibraryManager manager) {
+        if(classExists("org.sqlite.JDBC")) {
+            return; // SQLite JDBC already exists
+        }
         final Library sqlite = Library.builder()
                 .groupId("org{}xerial")
                 .artifactId("sqlite-jdbc")
                 .version("3.46.1.0")
-                .relocate("org{}sqlite", relocationPrefix + "{}anchor{}sqlite")
                 .build();
         manager.loadLibrary(sqlite);
     }
 
-    private static void loadMariadb(LibraryManager manager, String relocationPrefix) {
+    private static void loadMariadb(LibraryManager manager) {
+        if(classExists("org.mariadb.jdbc.Driver") || classExists("com.mysql.cj.jdbc.Driver")) {
+            return; // MariaDB or MySQL JDBC already exists
+        }
+
         final Library mariadb = Library.builder()
                 .groupId("org{}mariadb{}jdbc")
                 .artifactId("mariadb-java-client")
                 .version("3.2.0")
-                .relocate("org{}mariadb{}jdbc", relocationPrefix + "{}anchor{}mariadb{}jdbc")
                 .build();
         manager.loadLibrary(mariadb);
         final Library connector = Library.builder()
                 .groupId("com{}mysql")
                 .artifactId("mysql-connector-j")
                 .version("8.1.0")
-                .relocate("com{}mysql", relocationPrefix + "{}anchor{}mariadb{}mysql-connector")
                 .build();
         manager.loadLibrary(connector);
     }

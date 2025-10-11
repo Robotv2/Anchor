@@ -20,6 +20,10 @@ repositories {
 dependencies {
     implementation 'com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT'
     compileOnly 'org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT'
+    compileOnly project(":Anchor-api")
+    compileOnly project(":Anchor-json")
+    compileOnly project(":Anchor-mariadb")
+    compileOnly project(":Anchor-sqlite")
 }
 
 shadowJar {
