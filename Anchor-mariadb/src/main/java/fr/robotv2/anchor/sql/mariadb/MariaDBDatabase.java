@@ -1,15 +1,25 @@
 package fr.robotv2.anchor.sql.mariadb;
 
-import fr.robotv2.anchor.api.repository.Identifiable;
-import fr.robotv2.anchor.sql.database.HikariDatabase;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import fr.robotv2.anchor.api.database.SupportType;
+import fr.robotv2.anchor.api.repository.Identifiable;
+import fr.robotv2.anchor.sql.database.HikariDatabase;
 
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class MariaDBDatabase extends HikariDatabase {
+
+    private static final Set<SupportType> SUPPORTED_TYPES = EnumSet.of(
+            SupportType.WRAPPED_ASYNC,
+            SupportType.MIGRATION,
+            SupportType.QUERY,
+            SupportType.TRANSACTION
+    );
 
     // https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing
     public static final int MAXIMUM_POOL_SIZE = (Runtime.getRuntime().availableProcessors() * 2) + 1;
@@ -32,6 +42,11 @@ public class MariaDBDatabase extends HikariDatabase {
     @SuppressWarnings("unchecked")
     public <ID, T extends Identifiable<ID>> MariaDBRepository<ID, T> getRepository(Class<T> cls) {
         return (MariaDBRepository<ID, T>) repositories.computeIfAbsent(cls, c -> new MariaDBRepository<>(this, cls));
+    }
+
+    @Override
+    public boolean supports(SupportType type) {
+        return SUPPORTED_TYPES.contains(type);
     }
 
     private static HikariDataSource defaultConfig(MariaDBConfiguration credentials) {

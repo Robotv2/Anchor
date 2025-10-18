@@ -6,14 +6,17 @@ import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.api.repository.Operator;
 import fr.robotv2.anchor.api.util.BlobSerializationUtility;
 
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Interface for database-specific SQL generation and type conversion.
@@ -181,7 +184,45 @@ public interface SQLDialect {
      * @param value the value to compare against, may be {@code null}
      * @return a SqlFragment containing the predicate and parameters, never {@code null}
      */
-    SqlFragment buildPredicate(String column, Operator operator, Object value);
+    default SqlFragment buildPredicate(String column, Operator operator, Object value) {
+        final String colSql = quoteIdentifier(column);
+        // Null-safe handling for EQUAL / NOT_EQUAL
+        if (value == null) {
+            if (operator == Operator.EQUAL) {
+                return new SqlFragment(colSql + " IS NULL", List.of());
+            }
+            if (operator == Operator.NOT_EQUAL) {
+                return new SqlFragment(colSql + " IS NOT NULL", List.of());
+            }
+            throw new IllegalArgumentException("NULL value only supported with EQUAL or NOT_EQUAL");
+        }
+
+        if(operator == Operator.IN) {
+            final List<Object> values = new ArrayList<>();
+            if(value instanceof Iterable) {
+                for (Object item : (Iterable<?>) value) {values.add(item);}
+            } else if(value.getClass().isArray()) {
+                int length = Array.getLength(value);
+                for (int i = 0; i < length; i++) {values.add(Array.get(value, i));}
+            } else {
+                values.add(value);
+            }
+
+            if (values.isEmpty()) {
+                return new SqlFragment("1=0", List.of()); // Always false
+            }
+
+            if(values.size() == 1) {
+                return new SqlFragment(colSql + " = ?", List.of(values.get(0)));
+            } else {
+                String placeholders = values.stream().map(v -> "?").collect(Collectors.joining(", "));
+                return new SqlFragment(colSql + " IN (" + placeholders + ")", values);
+            }
+        }
+
+        final String symbol = operator.getSymbol(); // "=", "!=", ">", "<", ">=", "<=", "LIKE"
+        return new SqlFragment(colSql + " " + symbol + " ?", List.of(value));
+    }
 
     default String buildWhereClauseAndCollectParams(List<SqlCondition> conditions, List<Object> params) {
         if (conditions.isEmpty()) return "";

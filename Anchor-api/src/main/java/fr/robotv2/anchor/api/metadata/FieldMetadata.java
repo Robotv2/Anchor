@@ -131,7 +131,6 @@ public class FieldMetadata {
      * @param instance the entity instance to get the value from, must not be {@code null}
      * @return the field value, may be {@code null}
      * @throws RuntimeException if the field cannot be accessed
-     * @apiNote This method is intended for internal framework use
      */
     @Nullable
     public Object safeGet(@NotNull Object instance) {
@@ -144,7 +143,6 @@ public class FieldMetadata {
      * @param instance the entity instance to set the value on, must not be {@code null}
      * @param value the value to set, may be {@code null}
      * @throws RuntimeException if the field cannot be accessed
-     * @apiNote This method is intended for internal framework use
      */
     public void safeSet(@NotNull Object instance, @Nullable Object value) {
         accessor.set(instance, value);

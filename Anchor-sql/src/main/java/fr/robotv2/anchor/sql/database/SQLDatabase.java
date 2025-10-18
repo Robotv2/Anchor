@@ -1,6 +1,7 @@
 package fr.robotv2.anchor.sql.database;
 
 import fr.robotv2.anchor.api.database.Database;
+import fr.robotv2.anchor.api.database.SupportType;
 import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.IndexMetadata;
 import fr.robotv2.anchor.sql.dialect.SQLDialect;
@@ -167,4 +168,17 @@ public interface SQLDatabase extends Database {
      * @throws IllegalStateException if the database is not connected
      */
     boolean dropIndex(EntityMetadata metadata, IndexMetadata index) throws SQLException;
+
+    /**
+     * Checks if the database supports a specific feature.
+     * <p>
+     * This method allows querying the capabilities of the underlying
+     * database implementation, such as support for transactions,
+     * batch updates, or specific SQL features.
+     * </p>
+     *
+     * @param type the support type to check, must not be {@code null}
+     * @return {@code true} if the feature is supported, {@code false} otherwise
+     */
+    boolean supports(SupportType type);
 }

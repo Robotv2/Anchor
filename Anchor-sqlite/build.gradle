@@ -4,14 +4,12 @@ plugins {
 
 dependencies {
     api project(':Anchor-sql')
-    implementation libs.hikari
     testImplementation libs.sqlite_jdbc
     testImplementation testFixtures(project(':Anchor-api'))
 }
 
 shadowJar {
     dependsOn(':Anchor-sql:shadowJar')
-    relocate 'com.zaxxer.hikari', 'fr.robotv2.anchor.sql.hikari'
     archiveClassifier.set('')
 }
 

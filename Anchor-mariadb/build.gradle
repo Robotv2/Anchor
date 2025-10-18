@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     api project(':Anchor-sql')
-    implementation libs.hikari
     testImplementation libs.mariadb_java_client
     testImplementation libs.mysql_connector_java
     testImplementation 'com.h2database:h2:2.2.220'
@@ -13,7 +12,6 @@ dependencies {
 
 shadowJar {
     dependsOn(':Anchor-sql:shadowJar')
-    relocate 'com.zaxxer.hikari', 'fr.robotv2.anchor.sql.hikari'
     archiveClassifier.set('')
 }
 

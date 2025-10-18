@@ -1,5 +1,7 @@
 package fr.robotv2.anchor.api.repository;
 
+import fr.robotv2.anchor.api.repository.async.AsyncRepository;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

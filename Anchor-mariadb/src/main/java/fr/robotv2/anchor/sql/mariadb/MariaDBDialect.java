@@ -175,24 +175,6 @@ public class MariaDBDialect implements SQLDialect {
     }
 
     @Override
-    public SqlFragment buildPredicate(String column, Operator operator, Object value) {
-        final String colSql = quoteIdentifier(column);
-        // Null-safe handling for EQUAL / NOT_EQUAL
-        if (value == null) {
-            if (operator == Operator.EQUAL) {
-                return new SqlFragment(colSql + " IS NULL", List.of());
-            }
-            if (operator == Operator.NOT_EQUAL) {
-                return new SqlFragment(colSql + " IS NOT NULL", List.of());
-            }
-            throw new IllegalArgumentException("NULL value only supported with EQUAL or NOT_EQUAL");
-        }
-
-        final String symbol = operator.getSymbol(); // e.g., =, !=, >, <, >=, <=, LIKE
-        return new SqlFragment(colSql + " " + symbol + " ?", List.of(value));
-    }
-
-    @Override
     public Object toDatabaseValue(Object v) {
         if (v == null) return null;
         if (v instanceof Boolean) return ((Boolean) v) ? 1 : 0;

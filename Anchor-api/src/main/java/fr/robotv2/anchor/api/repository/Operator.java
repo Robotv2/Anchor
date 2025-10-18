@@ -62,6 +62,14 @@ public enum Operator {
      * </p>
      */
     NOT_EQUAL("!="),
+
+    /**
+     * IN comparison, operator for checking membership in a set.
+     * <p>
+     * SQL equivalent: {@code IN}
+     * </p>
+     */
+    IN("IN"),
     ;
 
     private final String symbol;

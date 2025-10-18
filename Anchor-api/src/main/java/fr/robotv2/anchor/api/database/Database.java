@@ -1,6 +1,6 @@
 package fr.robotv2.anchor.api.database;
 
-import fr.robotv2.anchor.api.repository.AsyncRepository;
+import fr.robotv2.anchor.api.repository.async.AsyncRepository;
 import fr.robotv2.anchor.api.repository.Identifiable;
 import fr.robotv2.anchor.api.repository.Repository;
 

@@ -19,14 +19,18 @@ repositories {
 
 dependencies {
     implementation 'com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT'
-    compileOnly 'org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT'
+    compileOnly libs.spigot_api
+
     compileOnly project(":Anchor-api")
+    compileOnly project(":Anchor-sql")
     compileOnly project(":Anchor-json")
     compileOnly project(":Anchor-mariadb")
     compileOnly project(":Anchor-sqlite")
+    compileOnly libs.hikari
 }
 
 shadowJar {
+    dependsOn(':Anchor-sqlite:shadowJar')
     relocate 'com.alessiodp.libby', 'fr.robotv2.anchor.bukkit.libby'
     archiveClassifier.set('')
 }

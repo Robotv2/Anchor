@@ -18,7 +18,6 @@ import java.lang.reflect.Field;
  *
  * @since 1.0
  * @see FieldMetadata
- * @apiNote This class is intended for internal framework use
  */
 @ApiStatus.Internal
 public final class FieldAccessor {

@@ -1,5 +1,6 @@
 package fr.robotv2.anchor.api.repository;
 
+import fr.robotv2.anchor.api.repository.async.AsyncRepository;
 import org.jetbrains.annotations.Nullable;
 
 /**

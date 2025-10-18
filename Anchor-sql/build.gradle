@@ -4,10 +4,9 @@ plugins {
 
 dependencies {
     api project(':Anchor-api')
-    implementation libs.hikari
+    api libs.hikari
 }
 
 shadowJar {
-    relocate 'com.zaxxer.hikari', 'fr.robotv2.anchor.sql.hikari'
     archiveClassifier.set('')
 }

@@ -1,4 +1,8 @@
-package fr.robotv2.anchor.api.repository;
+package fr.robotv2.anchor.api.repository.async;
+
+import fr.robotv2.anchor.api.repository.Identifiable;
+import fr.robotv2.anchor.api.repository.QueryableRepository;
+import fr.robotv2.anchor.api.repository.Repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -148,6 +152,10 @@ public interface AsyncRepository<ID, E extends Identifiable<ID>> {
      * @throws IllegalArgumentException if repository is {@code null}
      */
     static <ID, E extends Identifiable<ID>> AsyncRepository<ID, E> wrap(Repository<ID, E> repository) {
+        if(repository instanceof QueryableRepository<ID,E> queryable) {
+            return AsyncQueryableRepository.wrap(queryable);
+        }
+
         return new AsyncRepository<>() {
 
             @Override

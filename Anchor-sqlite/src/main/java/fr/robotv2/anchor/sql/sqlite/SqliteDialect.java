@@ -4,11 +4,9 @@ import fr.robotv2.anchor.api.annotation.Column;
 import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.FieldMetadata;
 import fr.robotv2.anchor.api.metadata.IndexMetadata;
-import fr.robotv2.anchor.api.repository.Operator;
 import fr.robotv2.anchor.sql.dialect.ColumnType;
 import fr.robotv2.anchor.sql.dialect.SQLDialect;
 import fr.robotv2.anchor.sql.dialect.SqlCondition;
-import fr.robotv2.anchor.sql.dialect.SqlFragment;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -128,24 +126,6 @@ public class SqliteDialect implements SQLDialect {
         String where = buildWhereClauseAndCollectParams(conditions, params);
         sql.append(where);
         return sql.toString();
-    }
-
-    @Override
-    public SqlFragment buildPredicate(String column, Operator operator, Object value) {
-        final String colSql = quoteIdentifier(column);
-        // Null-safe handling for EQUAL / NOT_EQUAL
-        if (value == null) {
-            if (operator == Operator.EQUAL) {
-                return new SqlFragment(colSql + " IS NULL", List.of());
-            }
-            if (operator == Operator.NOT_EQUAL) {
-                return new SqlFragment(colSql + " IS NOT NULL", List.of());
-            }
-            throw new IllegalArgumentException("NULL value only supported with EQUAL or NOT_EQUAL");
-        }
-
-        final String symbol = operator.getSymbol(); // "=", "!=", ">", "<", ">=", "<=", "LIKE"
-        return new SqlFragment(colSql + " " + symbol + " ?", List.of(value));
     }
 
     @Override

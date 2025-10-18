@@ -12,7 +12,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.lang.module.Configuration;
 
 public class AnchorBukkit {
 
@@ -100,7 +99,11 @@ public class AnchorBukkit {
                 if(!isJsonAvailable()) {
                     throw new IllegalStateException("JsonDatabase class not found. Please include the JSON module.");
                 }
-                final String filename = section.getString("file", "data.json");
+                String filename = "data.json";
+                final ConfigurationSection dbSection = section.getConfigurationSection("json");
+                if(dbSection != null) {
+                    filename = section.getString("file", "data.json");
+                }
                 yield new JsonDatabase(new File(plugin.getDataFolder(), filename));
             }
 
@@ -108,7 +111,12 @@ public class AnchorBukkit {
                 if(!isSqliteAvailable()) {
                     throw new IllegalStateException("SqliteDatabase class not found. Please include the SQLite module.");
                 }
-                final String filename = section.getString("file", "data.database");
+                String filename = "data.database";
+                final ConfigurationSection dbSection = section.getConfigurationSection("sqlite");
+                if(dbSection != null) {
+                    filename = section.getString("file", "data.database");
+                }
+
                 yield new SqliteDatabase(new File(plugin.getDataFolder(), filename));
             }
 
@@ -116,11 +124,26 @@ public class AnchorBukkit {
                 if(!isMariadbAvailable()) {
                     throw new IllegalStateException("MariaDBDatabase class not found. Please include the MariaDB module.");
                 }
-                final String host = section.getString("host", "localhost");
-                final int port = section.getInt("port", 3306);
-                final String database = section.getString("database", "anchor");
-                final String username = section.getString("username", "root");
-                final String password = section.getString("password", "");
+
+                final ConfigurationSection dbSection;
+
+                if(section.isConfigurationSection("mariadb")) {
+                    dbSection = section.getConfigurationSection("mariadb");
+                } else if(section.isConfigurationSection("mysql")) {
+                    dbSection = section.getConfigurationSection("mysql");
+                } else {
+                    throw new IllegalArgumentException("MariaDB configuration section is missing.");
+                }
+
+                if(dbSection == null) {
+                    throw new IllegalArgumentException("MariaDB configuration section is missing.");
+                }
+
+                final String host = dbSection.getString("host", "localhost");
+                final int port = dbSection.getInt("port", 3306);
+                final String database = dbSection.getString("database", "anchor");
+                final String username = dbSection.getString("username", "root");
+                final String password = dbSection.getString("password", "");
                 final MariaDBConfiguration configuration = new MariaDBConfiguration(host, port, database, username, password);
                 yield new MariaDBDatabase(configuration);
             }
