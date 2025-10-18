@@ -6,6 +6,7 @@ import fr.robotv2.anchor.api.repository.QueryBuilder;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * Provides a fluent interface for building and executing asynchronous database queries.
@@ -128,7 +129,7 @@ public interface AsyncQueryBuilder<ID, T extends Identifiable<ID>> {
      * @return an AsyncQueryBuilder that wraps the provided QueryBuilder
      * @throws IllegalArgumentException if builder is {@code null}
      */
-    static <ID, E extends Identifiable<ID>> AsyncQueryBuilder<ID, E> wrap(QueryBuilder<ID, E> builder) {
+    static <ID, E extends Identifiable<ID>> AsyncQueryBuilder<ID, E> wrap(QueryBuilder<ID, E> builder, Executor executor) {
         return new AsyncQueryBuilder<>() {
 
             @Override
@@ -157,17 +158,17 @@ public interface AsyncQueryBuilder<ID, T extends Identifiable<ID>> {
 
             @Override
             public CompletableFuture<List<E>> all() {
-                return CompletableFuture.supplyAsync(builder::all);
+                return CompletableFuture.supplyAsync(builder::all, executor);
             }
 
             @Override
             public CompletableFuture<E> one() {
-                return CompletableFuture.supplyAsync(builder::one);
+                return CompletableFuture.supplyAsync(builder::one, executor);
             }
 
             @Override
             public CompletableFuture<Integer> delete() {
-                return CompletableFuture.supplyAsync(builder::delete);
+                return CompletableFuture.supplyAsync(builder::delete, executor);
             }
         };
     }

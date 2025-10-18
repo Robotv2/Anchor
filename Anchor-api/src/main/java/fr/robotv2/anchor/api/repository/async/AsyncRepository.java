@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * Provides asynchronous CRUD operations for entities using {@link CompletableFuture}.
@@ -151,51 +152,51 @@ public interface AsyncRepository<ID, E extends Identifiable<ID>> {
      * @return an AsyncRepository that delegates to the given synchronous repository
      * @throws IllegalArgumentException if repository is {@code null}
      */
-    static <ID, E extends Identifiable<ID>> AsyncRepository<ID, E> wrap(Repository<ID, E> repository) {
+    static <ID, E extends Identifiable<ID>> AsyncRepository<ID, E> wrap(Repository<ID, E> repository, Executor executor) {
         if(repository instanceof QueryableRepository<ID,E> queryable) {
-            return AsyncQueryableRepository.wrap(queryable);
+            return AsyncQueryableRepository.wrap(queryable, executor);
         }
 
         return new AsyncRepository<>() {
 
             @Override
             public CompletableFuture<Void> save(E entity) {
-                return CompletableFuture.runAsync(() -> repository.save(entity));
+                return CompletableFuture.runAsync(() -> repository.save(entity), executor);
             }
 
             @Override
             public CompletableFuture<Void> saveAll(Collection<E> entities) {
-                return CompletableFuture.runAsync(() -> repository.saveAll(entities));
+                return CompletableFuture.runAsync(() -> repository.saveAll(entities), executor);
             }
 
             @Override
             public CompletableFuture<Void> delete(E entity) {
-                return CompletableFuture.runAsync(() -> repository.delete(entity));
+                return CompletableFuture.runAsync(() -> repository.delete(entity), executor);
             }
 
             @Override
             public CompletableFuture<Void> deleteById(ID id) {
-                return CompletableFuture.runAsync(() -> repository.deleteById(id));
+                return CompletableFuture.runAsync(() -> repository.deleteById(id), executor);
             }
 
             @Override
             public CompletableFuture<Void> deleteAll(Collection<E> entities) {
-                return CompletableFuture.runAsync(() -> repository.deleteAll(entities));
+                return CompletableFuture.runAsync(() -> repository.deleteAll(entities), executor);
             }
 
             @Override
             public CompletableFuture<Void> deleteAllById(Collection<ID> ids) {
-                return CompletableFuture.runAsync(() -> repository.deleteAllById(ids));
+                return CompletableFuture.runAsync(() -> repository.deleteAllById(ids), executor);
             }
 
             @Override
             public CompletableFuture<Optional<E>> findById(ID id) {
-                return CompletableFuture.supplyAsync(() -> repository.findById(id));
+                return CompletableFuture.supplyAsync(() -> repository.findById(id), executor);
             }
 
             @Override
             public CompletableFuture<List<E>> findAll() {
-                return CompletableFuture.supplyAsync(repository::findAll);
+                return CompletableFuture.supplyAsync(repository::findAll, executor);
             }
         };
     }

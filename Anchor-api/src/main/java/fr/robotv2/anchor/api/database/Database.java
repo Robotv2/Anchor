@@ -4,6 +4,9 @@ import fr.robotv2.anchor.api.repository.async.AsyncRepository;
 import fr.robotv2.anchor.api.repository.Identifiable;
 import fr.robotv2.anchor.api.repository.Repository;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+
 /**
  * Represents a database connection and provides access to repositories for entity operations.
  * <p>
@@ -88,7 +91,28 @@ public interface Database {
      * @throws IllegalArgumentException if the entity class is not properly annotated
      * @throws IllegalStateException if the database is not connected
      */
+    default <ID, T extends Identifiable<ID>> AsyncRepository<ID, T> getAsyncRepository(Class<T> clazz, Executor executor) {
+        return AsyncRepository.wrap(getRepository(clazz), executor);
+    }
+
+    /**
+     * Returns an asynchronous repository for performing non-blocking CRUD operations
+     * using the common ForkJoinPool as the executor.
+     * <p>
+     * This is a convenience method that wraps the synchronous repository from
+     * {@link #getRepository(Class)} in an {@link AsyncRepository}. The async repository
+     * returns {@link java.util.concurrent.CompletableFuture} objects for all operations,
+     * allowing for non-blocking database operations.
+     * </p>
+     *
+     * @param <ID> the type of entity identifiers
+     * @param <T> the entity type extending {@link Identifiable}
+     * @param clazz the entity class to get an async repository for
+     * @return an asynchronous repository for the specified entity type
+     * @throws IllegalArgumentException if the entity class is not properly annotated
+     * @throws IllegalStateException if the database is not connected
+     */
     default <ID, T extends Identifiable<ID>> AsyncRepository<ID, T> getAsyncRepository(Class<T> clazz) {
-        return AsyncRepository.wrap(getRepository(clazz));
+        return getAsyncRepository(clazz, ForkJoinPool.commonPool());
     }
 }
