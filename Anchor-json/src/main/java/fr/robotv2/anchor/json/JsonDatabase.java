@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.robotv2.anchor.api.annotation.Column;
 import fr.robotv2.anchor.api.database.Database;
+import fr.robotv2.anchor.api.database.SupportType;
 import fr.robotv2.anchor.api.repository.Identifiable;
 import fr.robotv2.anchor.json.serializer.LocalDataTimeAdapter;
 
@@ -68,6 +69,11 @@ public class JsonDatabase implements Database {
     @Override
     public boolean isConnected() {
         return true;
+    }
+
+    @Override
+    public boolean supports(SupportType type) {
+        return type == SupportType.WRAPPED_ASYNC || type == SupportType.MIGRATION;
     }
 
     @Override

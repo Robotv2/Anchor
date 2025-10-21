@@ -59,6 +59,19 @@ public interface Database {
     boolean isConnected();
 
     /**
+     * Checks if the database supports a specific feature.
+     * <p>
+     * This method allows querying the capabilities of the underlying
+     * database implementation, such as support for transactions,
+     * batch updates, or specific SQL features.
+     * </p>
+     *
+     * @param type the support type to check, must not be {@code null}
+     * @return {@code true} if the feature is supported, {@code false} otherwise
+     */
+    boolean supports(SupportType type);
+
+    /**
      * Returns a repository for performing CRUD operations on the specified entity type.
      * <p>
      * The repository provides methods for saving, finding, updating, and deleting
