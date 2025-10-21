@@ -42,12 +42,6 @@ public interface SQLMigrationExecutor extends MigrationExecutor {
                 .filter(col -> !entityColumns.contains(col))
                 .toList();
 
-        logger.info("Database columns: " + databaseColumns);
-        logger.info("Entity columns: " + entityColumns);
-        logger.info("Columns to add: " + columnsToAdd.stream().map(FieldMetadata::getColumnName).toList());
-        logger.info("Columns to drop: " + columnsToDrop);
-
-
         if (columnsToAdd.isEmpty() && columnsToDrop.isEmpty()) {
             logger.info("No schema changes detected for entity '" + tableName + "'");
         } else {
