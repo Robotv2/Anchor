@@ -142,15 +142,21 @@ public interface AsyncRepository<ID, E extends Identifiable<ID>> {
      * Creates an asynchronous repository that wraps a synchronous repository.
      * <p>
      * This static factory method provides a convenient way to obtain an AsyncRepository
-     * implementation that executes operations on the default ForkJoinPool. Each operation
+     * implementation that executes operations using the specified executor. Each operation
      * from the synchronous repository is wrapped in a CompletableFuture.
+     * </p>
+     * <p>
+     * <strong>Thread Safety:</strong> The returned AsyncRepository is thread-safe and can be
+     * safely used from multiple threads. All operations are executed asynchronously on the
+     * provided executor.
      * </p>
      *
      * @param <ID> the type of entity identifiers
      * @param <E> the entity type extending {@link Identifiable}
      * @param repository the synchronous repository to wrap, must not be {@code null}
+     * @param executor the executor to use for asynchronous operations, must not be {@code null}
      * @return an AsyncRepository that delegates to the given synchronous repository
-     * @throws IllegalArgumentException if repository is {@code null}
+     * @throws IllegalArgumentException if repository or executor is {@code null}
      */
     static <ID, E extends Identifiable<ID>> AsyncRepository<ID, E> wrap(Repository<ID, E> repository, Executor executor) {
         if(repository instanceof QueryableRepository<ID,E> queryable) {

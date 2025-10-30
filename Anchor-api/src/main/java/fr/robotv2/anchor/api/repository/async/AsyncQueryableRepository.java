@@ -32,12 +32,18 @@ public interface AsyncQueryableRepository<ID, T extends Identifiable<ID>> extend
      * CompletableFuture. This is useful for integrating synchronous repositories into
      * asynchronous workflows without blocking the calling thread.
      * </p>
+     * <p>
+     * <strong>Thread Safety:</strong> The returned AsyncQueryableRepository is thread-safe and can be
+     * safely used from multiple threads. All operations are executed asynchronously on the
+     * provided executor.
+     * </p>
      *
      * @param repository the synchronous QueryableRepository to wrap, must not be {@code null}
+     * @param executor the executor to use for asynchronous operations, must not be {@code null}
      * @param <ID>       the type of entity identifiers
      * @param <E>        the entity type extending {@link Identifiable}
      * @return an AsyncQueryableRepository that wraps the provided repository, never {@code null}
-     * @throws IllegalArgumentException if repository is {@code null}
+     * @throws IllegalArgumentException if repository or executor is {@code null}
      */
     static <ID, E extends Identifiable<ID>> AsyncQueryableRepository<ID, E> wrap(QueryableRepository<ID, E> repository, Executor executor) {
         return new AsyncQueryableRepository<>() {

@@ -122,52 +122,58 @@ public interface AsyncQueryBuilder<ID, T extends Identifiable<ID>> {
      * CompletableFutures. This allows for non-blocking database operations while
      * reusing existing query logic.
      * </p>
+     * <p>
+     * <strong>Thread Safety:</strong> The returned AsyncQueryBuilder is thread-safe.
+     * All mutations to the underlying QueryBuilder are synchronized to ensure
+     * that concurrent operations do not interfere with each other.
+     * </p>
      *
      * @param builder the synchronous QueryBuilder to wrap, must not be {@code null}
+     * @param executor the executor to use for asynchronous operations, must not be {@code null}
      * @param <ID> the type of entity identifiers
      * @param <E> the entity type extending {@link Identifiable}
      * @return an AsyncQueryBuilder that wraps the provided QueryBuilder
-     * @throws IllegalArgumentException if builder is {@code null}
+     * @throws IllegalArgumentException if builder or executor is {@code null}
      */
     static <ID, E extends Identifiable<ID>> AsyncQueryBuilder<ID, E> wrap(QueryBuilder<ID, E> builder, Executor executor) {
         return new AsyncQueryBuilder<>() {
 
             @Override
-            public AsyncQueryBuilder<ID, E> where(String column, Operator operator, Object value) {
+            public synchronized AsyncQueryBuilder<ID, E> where(String column, Operator operator, Object value) {
                 builder.where(column, operator, value);
                 return this;
             }
 
             @Override
-            public AsyncQueryBuilder<ID, E> and() {
+            public synchronized AsyncQueryBuilder<ID, E> and() {
                 builder.and();
                 return this;
             }
 
             @Override
-            public AsyncQueryBuilder<ID, E> or() {
+            public synchronized AsyncQueryBuilder<ID, E> or() {
                 builder.or();
                 return this;
             }
 
             @Override
-            public AsyncQueryBuilder<ID, E> limit(int count) {
+            public synchronized AsyncQueryBuilder<ID, E> limit(int count) {
                 builder.limit(count);
                 return this;
             }
 
             @Override
-            public CompletableFuture<List<E>> all() {
+            public synchronized CompletableFuture<List<E>> all() {
                 return CompletableFuture.supplyAsync(builder::all, executor);
             }
 
             @Override
-            public CompletableFuture<E> one() {
+            public synchronized CompletableFuture<E> one() {
                 return CompletableFuture.supplyAsync(builder::one, executor);
             }
 
             @Override
-            public CompletableFuture<Integer> delete() {
+            public synchronized CompletableFuture<Integer> delete() {
                 return CompletableFuture.supplyAsync(builder::delete, executor);
             }
         };
