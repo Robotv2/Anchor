@@ -13,7 +13,6 @@ import fr.robotv2.anchor.api.repository.Repository;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -167,19 +166,13 @@ public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Querya
         // Add ID field
         document.append(idColumnName, convertId(entity.getId()));
         
-        // Add all other fields
+        // Add all other fields using FieldAccessor for performance
         for (FieldMetadata fieldMetadata : metadata.getFields().values()) {
-            try {
-                Field field = fieldMetadata.getField();
-                field.setAccessible(true);
-                Object value = field.get(entity);
-                
-                // Convert value to MongoDB-compatible type
-                Object convertedValue = toMongoValue(value);
-                document.append(fieldMetadata.getColumnName(), convertedValue);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Failed to access field: " + fieldMetadata.getField().getName(), e);
-            }
+            Object value = fieldMetadata.safeGet(entity);
+            
+            // Convert value to MongoDB-compatible type
+            Object convertedValue = toMongoValue(value);
+            document.append(fieldMetadata.getColumnName(), convertedValue);
         }
         
         return document;
@@ -196,18 +189,17 @@ public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Querya
         try {
             T entity = cls.getDeclaredConstructor().newInstance();
             
-            // Set ID field
-            Field idField = metadata.getIdField().getField();
-            idField.setAccessible(true);
+            // Set ID field using FieldAccessor
+            FieldMetadata idFieldMetadata = metadata.getIdField();
             Object idValue = document.get(idColumnName);
-            idField.set(entity, fromMongoValue(idValue, idField.getType()));
+            Object convertedId = fromMongoValue(idValue, idFieldMetadata.getAccessor().getFieldType());
+            idFieldMetadata.safeSet(entity, convertedId);
             
-            // Set all other fields
+            // Set all other fields using FieldAccessor for performance
             for (FieldMetadata fieldMetadata : metadata.getFields().values()) {
-                Field field = fieldMetadata.getField();
-                field.setAccessible(true);
                 Object value = document.get(fieldMetadata.getColumnName());
-                field.set(entity, fromMongoValue(value, field.getType()));
+                Object convertedValue = fromMongoValue(value, fieldMetadata.getAccessor().getFieldType());
+                fieldMetadata.safeSet(entity, convertedValue);
             }
             
             return entity;
