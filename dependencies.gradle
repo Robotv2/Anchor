@@ -9,6 +9,7 @@ ext {
             sqlite_jdbc : '3.46.1.0',
             mariadb_java_client: '3.2.0',
             mysql_connector_java: '8.1.0',
+            mongodb_driver: '5.2.0',
             spigot_api: '1.21-R0.1-SNAPSHOT'
     ]
 
@@ -22,6 +23,7 @@ ext {
             junit_jupiter_api    : "org.junit.jupiter:junit-jupiter-api:${versions.junit}",
             spigot_api: "org.spigotmc:spigot-api:${versions.spigot_api}",
             mariadb_java_client: "org.mariadb.jdbc:mariadb-java-client:${versions.mariadb_java_client}",
-            mysql_connector_java: "com.mysql:mysql-connector-j:${versions.mysql_connector_java}"
+            mysql_connector_java: "com.mysql:mysql-connector-j:${versions.mysql_connector_java}",
+            mongodb_driver_sync: "org.mongodb:mongodb-driver-sync:${versions.mongodb_driver}"
     ]
 }

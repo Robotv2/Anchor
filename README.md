@@ -5,7 +5,7 @@ A lightweight Java Object-Relational Mapping library that provides a simple, ann
 ## Features
 
 - Annotation-driven entity mapping
-- Multiple database support (SQLite, MariaDB, JSON file storage)
+- Multiple database support (SQLite, MariaDB, MongoDB, JSON file storage)
 - Synchronous and asynchronous repository patterns
 - Built-in connection pooling with HikariCP
 - Automatic schema migration
@@ -20,6 +20,9 @@ Embedded, file-based database perfect for development, testing, and small applic
 
 ### MariaDB
 Production-ready relational database with full feature support and connection pooling.
+
+### MongoDB
+NoSQL document database perfect for flexible schema applications and scalable deployments.
 
 ### JSON
 File-based storage using JSON serialization, ideal for simple applications and testing.
@@ -60,6 +63,7 @@ Replace `[module]` with one of the following database implementations:
 
 - `Anchor-sqlite` - SQLite database support
 - `Anchor-mariadb` - MariaDB database support
+- `Anchor-mongodb` - MongoDB database support
 - `Anchor-json` - JSON file storage support
 
 ## Quick Start
@@ -97,6 +101,11 @@ MariaDBConfiguration config = new MariaDBConfiguration("localhost", 3306, "mydb"
 Database database = new MariaDBDatabase(config);
 database.connect();
 
+// MongoDB
+MongoDBConfiguration mongoConfig = new MongoDBConfiguration("localhost", 27017, "mydb", "user", "pass");
+Database database = new MongoDBDatabase(mongoConfig);
+database.connect();
+
 // JSON
 Database database = new JsonDatabase(new File("./data"));
 database.connect();
@@ -130,6 +139,7 @@ database.disconnect();
 - **Anchor-sql** - SQL database abstraction layer
 - **Anchor-sqlite** - SQLite-specific implementation
 - **Anchor-mariadb** - MariaDB-specific implementation
+- **Anchor-mongodb** - MongoDB-specific implementation
 - **Anchor-json** - JSON file storage implementation
 - **Anchor-bukkit** - Minecraft plugin integration
 
