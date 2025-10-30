@@ -3,6 +3,7 @@ package fr.robotv2.anchor.sql.repository;
 import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.MetadataProcessor;
 import fr.robotv2.anchor.api.repository.*;
+import fr.robotv2.anchor.sql.database.HikariDatabase;
 import fr.robotv2.anchor.sql.database.SQLDatabase;
 
 import java.sql.Connection;
@@ -144,8 +145,8 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
             transactionConnection.set(connection);
             
             // If this is a HikariDatabase, register the transaction connection
-            if (database instanceof fr.robotv2.anchor.sql.database.HikariDatabase) {
-                ((fr.robotv2.anchor.sql.database.HikariDatabase) database).setTransactionConnection(connection);
+            if (database instanceof HikariDatabase) {
+                ((HikariDatabase) database).setTransactionConnection(connection);
             }
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to begin transaction", exception);
@@ -201,15 +202,26 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
     private void cleanupTransaction(Connection connection) {
         try {
             connection.setAutoCommit(true);
-            connection.close();
+            // Only close the connection if it's a real transaction connection
+            // For pooled connections managed by HikariDatabase, let the pool handle it
+            if (!(database instanceof HikariDatabase)) {
+                connection.close();
+            }
         } catch (SQLException exception) {
-            logger.log(Level.WARNING, "Failed to reset auto-commit or close connection", exception);
+            logger.log(Level.WARNING, "Failed to reset auto-commit", exception);
         }
+        
+        // Clear the transaction connection from ThreadLocal
         transactionConnection.remove();
         
-        // If this is a HikariDatabase, clear the transaction connection
-        if (database instanceof fr.robotv2.anchor.sql.database.HikariDatabase) {
-            ((fr.robotv2.anchor.sql.database.HikariDatabase) database).setTransactionConnection(null);
+        // If this is a HikariDatabase, clear the transaction connection and close it
+        if (database instanceof HikariDatabase) {
+            ((HikariDatabase) database).setTransactionConnection(null);
+            try {
+                connection.close();
+            } catch (SQLException exception) {
+                logger.log(Level.WARNING, "Failed to close connection", exception);
+            }
         }
     }
 }
