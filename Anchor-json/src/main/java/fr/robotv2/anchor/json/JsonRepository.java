@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class JsonRepository<ID, T extends Identifiable<ID>> implements Repository<ID, T> {
@@ -185,5 +186,25 @@ public class JsonRepository<ID, T extends Identifiable<ID>> implements Repositor
         } catch (IOException exception) {
             throw new RuntimeException("Failed to read entity from file: " + path.getFileName(), exception);
         }
+    }
+
+    @Override
+    public void beginTransaction() {
+        throw new UnsupportedOperationException("Transactions are not supported by JSON database");
+    }
+
+    @Override
+    public void commit() {
+        throw new UnsupportedOperationException("Transactions are not supported by JSON database");
+    }
+
+    @Override
+    public void rollback() {
+        throw new UnsupportedOperationException("Transactions are not supported by JSON database");
+    }
+
+    @Override
+    public void executeInTransaction(Consumer<Repository<ID, T>> operations) {
+        throw new UnsupportedOperationException("Transactions are not supported by JSON database");
     }
 }
