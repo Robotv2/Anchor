@@ -7,6 +7,8 @@ import fr.robotv2.anchor.api.metadata.EntityMetadata;
 import fr.robotv2.anchor.api.metadata.FieldMetadata;
 import fr.robotv2.anchor.api.metadata.MetadataProcessor;
 import fr.robotv2.anchor.api.repository.Identifiable;
+import fr.robotv2.anchor.api.repository.QueryBuilder;
+import fr.robotv2.anchor.api.repository.QueryableRepository;
 import fr.robotv2.anchor.api.repository.Repository;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -25,14 +27,14 @@ import java.util.UUID;
 /**
  * MongoDB repository implementation.
  * <p>
- * This class implements the Repository interface for MongoDB,
- * providing CRUD operations for entities stored in MongoDB collections.
+ * This class implements the QueryableRepository interface for MongoDB,
+ * providing CRUD operations and query building for entities stored in MongoDB collections.
  * </p>
  *
  * @param <ID> the type of entity identifiers
  * @param <T> the entity type extending {@link Identifiable}
  */
-public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Repository<ID, T> {
+public class MongoDBRepository<ID, T extends Identifiable<ID>> implements QueryableRepository<ID, T> {
 
     private final MongoDBDatabase database;
     private final Class<T> cls;
@@ -148,6 +150,11 @@ public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Reposi
         return results;
     }
 
+    @Override
+    public QueryBuilder<ID, T> query() {
+        return new MongoDBQueryBuilder<>(this, cls, collection);
+    }
+
     /**
      * Converts an entity to a MongoDB Document.
      *
@@ -180,11 +187,12 @@ public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Reposi
 
     /**
      * Converts a MongoDB Document to an entity.
+     * Package-private to allow access from MongoDBQueryBuilder.
      *
      * @param document the MongoDB document
      * @return the entity
      */
-    private T documentToEntity(Document document) {
+    T documentToEntity(Document document) {
         try {
             T entity = cls.getDeclaredConstructor().newInstance();
             
@@ -223,11 +231,12 @@ public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Reposi
 
     /**
      * Converts a value to MongoDB-compatible type.
+     * Package-private to allow access from MongoDBQueryBuilder.
      *
      * @param value the value to convert
      * @return the MongoDB-compatible value
      */
-    private Object toMongoValue(Object value) {
+    Object toMongoValue(Object value) {
         if (value == null) {
             return null;
         }
