@@ -30,6 +30,7 @@ public abstract class AbstractAsyncUserLongTest {
     protected Database database;
     protected Repository<Long, UserLong> repository;
     protected AsyncRepository<Long, UserLong> asyncRepository;
+    protected ExecutorService executor;
 
     protected abstract Database createDatabase(Path tempDir);
 
@@ -45,7 +46,7 @@ public abstract class AbstractAsyncUserLongTest {
         onRepositoryReady(repository);
         
         // Get async repository with custom executor for better control
-        ExecutorService executor = Executors.newFixedThreadPool(4);
+        executor = Executors.newFixedThreadPool(4);
         asyncRepository = database.getAsyncRepository(UserLong.class, executor);
         
         // Setup test data
@@ -57,6 +58,17 @@ public abstract class AbstractAsyncUserLongTest {
     @AfterEach
     void tearDown() {
         onTearDown(database, repository);
+        if (executor != null) {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
         if (database != null) {
             database.disconnect();
         }
