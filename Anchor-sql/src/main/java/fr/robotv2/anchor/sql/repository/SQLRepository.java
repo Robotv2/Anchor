@@ -5,8 +5,10 @@ import fr.robotv2.anchor.api.metadata.MetadataProcessor;
 import fr.robotv2.anchor.api.repository.*;
 import fr.robotv2.anchor.sql.database.SQLDatabase;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,6 +18,8 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
     protected final Class<T> cls;
     protected final EntityMetadata metadata;
     protected final Logger logger;
+
+    private ThreadLocal<Connection> transactionConnection = new ThreadLocal<>();
 
     public SQLRepository(SQLDatabase database, Class<T> cls) {
         this.database = database;
@@ -126,5 +130,75 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
     @Override
     public QueryBuilder<ID, T> query() {
         return new SQLQueryBuilder<>(database, cls);
+    }
+
+    @Override
+    public void beginTransaction() {
+        if (transactionConnection.get() != null) {
+            throw new IllegalStateException("Transaction already active");
+        }
+
+        try {
+            Connection connection = database.getConnection();
+            connection.setAutoCommit(false);
+            transactionConnection.set(connection);
+        } catch (SQLException exception) {
+            throw new RuntimeException("Failed to begin transaction", exception);
+        }
+    }
+
+    @Override
+    public void commit() {
+        Connection connection = transactionConnection.get();
+        if (connection == null) {
+            throw new IllegalStateException("No active transaction");
+        }
+
+        try {
+            connection.commit();
+        } catch (SQLException exception) {
+            throw new RuntimeException("Failed to commit transaction", exception);
+        } finally {
+            cleanupTransaction(connection);
+        }
+    }
+
+    @Override
+    public void rollback() {
+        Connection connection = transactionConnection.get();
+        if (connection == null) {
+            throw new IllegalStateException("No active transaction");
+        }
+
+        try {
+            connection.rollback();
+        } catch (SQLException exception) {
+            throw new RuntimeException("Failed to rollback transaction", exception);
+        } finally {
+            cleanupTransaction(connection);
+        }
+    }
+
+    @Override
+    public void executeInTransaction(Consumer<Repository<ID, T>> operations) {
+        Objects.requireNonNull(operations, "Operations cannot be null");
+
+        beginTransaction();
+        try {
+            operations.accept(this);
+            commit();
+        } catch (Exception exception) {
+            rollback();
+            throw new RuntimeException("Transaction failed and was rolled back", exception);
+        }
+    }
+
+    private void cleanupTransaction(Connection connection) {
+        try {
+            connection.setAutoCommit(true);
+        } catch (SQLException exception) {
+            logger.log(Level.WARNING, "Failed to reset auto-commit", exception);
+        }
+        transactionConnection.remove();
     }
 }

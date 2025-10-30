@@ -5,6 +5,7 @@ import fr.robotv2.anchor.api.repository.async.AsyncRepository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Provides CRUD (Create, Read, Update, Delete) operations for entities.
@@ -132,4 +133,77 @@ public interface Repository<ID, E extends Identifiable<ID>> {
      * @throws RuntimeException if the query operation fails
      */
     List<E> findAll();
+
+    /**
+     * Begins a new database transaction.
+     * <p>
+     * This method starts a transaction that allows multiple operations to be
+     * grouped together atomically. All operations performed after calling this
+     * method will be part of the transaction until either {@link #commit()} or
+     * {@link #rollback()} is called.
+     * </p>
+     * <p>
+     * Transaction management may not be supported by all database implementations.
+     * Check {@link fr.robotv2.anchor.api.database.Database#supports(fr.robotv2.anchor.api.database.SupportType)}
+     * with {@link fr.robotv2.anchor.api.database.SupportType#TRANSACTION} before
+     * using transaction methods.
+     * </p>
+     *
+     * @throws UnsupportedOperationException if transactions are not supported by this database
+     * @throws RuntimeException if the transaction cannot be started
+     */
+    void beginTransaction();
+
+    /**
+     * Commits the current transaction.
+     * <p>
+     * This method persists all changes made during the current transaction to
+     * the database. After a successful commit, the transaction is complete and
+     * a new transaction must be started for subsequent grouped operations.
+     * </p>
+     *
+     * @throws IllegalStateException if no transaction is active
+     * @throws UnsupportedOperationException if transactions are not supported by this database
+     * @throws RuntimeException if the commit operation fails
+     */
+    void commit();
+
+    /**
+     * Rolls back the current transaction.
+     * <p>
+     * This method discards all changes made during the current transaction,
+     * returning the database to its state before the transaction began.
+     * After a rollback, the transaction is complete and a new transaction
+     * must be started for subsequent grouped operations.
+     * </p>
+     *
+     * @throws IllegalStateException if no transaction is active
+     * @throws UnsupportedOperationException if transactions are not supported by this database
+     * @throws RuntimeException if the rollback operation fails
+     */
+    void rollback();
+
+    /**
+     * Executes a series of operations within a transaction.
+     * <p>
+     * This method provides a convenient way to perform multiple operations
+     * atomically within a transaction. The provided consumer receives this
+     * repository and can perform any operations. If the consumer completes
+     * successfully, the transaction is committed. If an exception is thrown,
+     * the transaction is rolled back automatically.
+     * </p>
+     * Example usage:
+     * <pre>{@code
+     * repository.executeInTransaction(repo -> {
+     *     repo.save(entity1);
+     *     repo.save(entity2);
+     *     repo.deleteById(oldId);
+     * });
+     * }</pre>
+     *
+     * @param operations the operations to execute within the transaction, must not be {@code null}
+     * @throws UnsupportedOperationException if transactions are not supported by this database
+     * @throws RuntimeException if any operation fails (transaction will be rolled back)
+     */
+    void executeInTransaction(Consumer<Repository<ID, E>> operations);
 }
