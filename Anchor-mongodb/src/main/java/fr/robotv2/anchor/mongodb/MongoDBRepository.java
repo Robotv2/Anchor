@@ -66,8 +66,19 @@ public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Reposi
             return;
         }
         
-        // MongoDB bulk operations could be more efficient, but for simplicity we iterate
-        entities.forEach(this::save);
+        // Use bulk write operations for better performance
+        List<com.mongodb.client.model.WriteModel<Document>> writes = new ArrayList<>();
+        for (T entity : entities) {
+            Document document = entityToDocument(entity);
+            Bson filter = Filters.eq(idColumnName, convertId(entity.getId()));
+            com.mongodb.client.model.ReplaceOneModel<Document> replaceModel = 
+                new com.mongodb.client.model.ReplaceOneModel<>(filter, document, new ReplaceOptions().upsert(true));
+            writes.add(replaceModel);
+        }
+        
+        if (!writes.isEmpty()) {
+            collection.bulkWrite(writes);
+        }
     }
 
     @Override
@@ -90,7 +101,12 @@ public class MongoDBRepository<ID, T extends Identifiable<ID>> implements Reposi
             return;
         }
         
-        entities.forEach(this::delete);
+        // Extract IDs and use deleteAllById for better performance
+        List<ID> ids = new ArrayList<>();
+        for (T entity : entities) {
+            ids.add(entity.getId());
+        }
+        deleteAllById(ids);
     }
 
     @Override

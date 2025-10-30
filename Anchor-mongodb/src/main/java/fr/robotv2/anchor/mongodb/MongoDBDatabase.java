@@ -51,17 +51,8 @@ public class MongoDBDatabase implements Database {
         }
 
         try {
-            // Build connection string
+            // Build connection string without credentials
             StringBuilder connectionStringBuilder = new StringBuilder("mongodb://");
-            
-            if (configuration.username() != null && !configuration.username().isEmpty()) {
-                connectionStringBuilder.append(configuration.username());
-                if (configuration.password() != null && !configuration.password().isEmpty()) {
-                    connectionStringBuilder.append(":").append(configuration.password());
-                }
-                connectionStringBuilder.append("@");
-            }
-            
             connectionStringBuilder.append(configuration.host())
                     .append(":")
                     .append(configuration.port())
@@ -69,11 +60,20 @@ public class MongoDBDatabase implements Database {
                     .append(configuration.database());
 
             ConnectionString connectionString = new ConnectionString(connectionStringBuilder.toString());
-            MongoClientSettings settings = MongoClientSettings.builder()
-                    .applyConnectionString(connectionString)
-                    .build();
+            MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
+                    .applyConnectionString(connectionString);
+            
+            // Add credentials if provided
+            if (configuration.username() != null && !configuration.username().isEmpty()) {
+                com.mongodb.MongoCredential credential = com.mongodb.MongoCredential.createCredential(
+                        configuration.username(),
+                        configuration.database(),
+                        configuration.password() != null ? configuration.password().toCharArray() : new char[0]
+                );
+                settingsBuilder.credential(credential);
+            }
 
-            mongoClient = MongoClients.create(settings);
+            mongoClient = MongoClients.create(settingsBuilder.build());
             database = mongoClient.getDatabase(configuration.database());
             connected = true;
         } catch (Exception e) {
