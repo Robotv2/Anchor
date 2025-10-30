@@ -142,6 +142,11 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
             Connection connection = database.getConnection();
             connection.setAutoCommit(false);
             transactionConnection.set(connection);
+            
+            // If this is a HikariDatabase, register the transaction connection
+            if (database instanceof fr.robotv2.anchor.sql.database.HikariDatabase) {
+                ((fr.robotv2.anchor.sql.database.HikariDatabase) database).setTransactionConnection(connection);
+            }
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to begin transaction", exception);
         }
@@ -196,9 +201,15 @@ public abstract class SQLRepository<ID, T extends Identifiable<ID>> implements Q
     private void cleanupTransaction(Connection connection) {
         try {
             connection.setAutoCommit(true);
+            connection.close();
         } catch (SQLException exception) {
-            logger.log(Level.WARNING, "Failed to reset auto-commit", exception);
+            logger.log(Level.WARNING, "Failed to reset auto-commit or close connection", exception);
         }
         transactionConnection.remove();
+        
+        // If this is a HikariDatabase, clear the transaction connection
+        if (database instanceof fr.robotv2.anchor.sql.database.HikariDatabase) {
+            ((fr.robotv2.anchor.sql.database.HikariDatabase) database).setTransactionConnection(null);
+        }
     }
 }

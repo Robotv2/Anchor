@@ -256,4 +256,116 @@ public abstract class AbstractUserLongTest {
         Assertions.assertEquals(blobUser.getBlob().getEnumValue(), retrieved.getBlob().getEnumValue());
         Assertions.assertEquals(blobUser.getBlob().getMap(), retrieved.getBlob().getMap());
     }
+
+    @Test
+    public void testTransactionCommit() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        repository.beginTransaction();
+        UserLong newUser = new UserLong(4L, "David", 28, true, "user", null);
+        repository.save(newUser);
+        repository.commit();
+
+        UserLong retrieved = repository.findById(4L).orElse(null);
+        Assertions.assertNotNull(retrieved);
+        Assertions.assertEquals("David", retrieved.getName());
+    }
+
+    @Test
+    public void testTransactionRollback() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        repository.beginTransaction();
+        UserLong newUser = new UserLong(5L, "Eve", 22, false, "user", null);
+        repository.save(newUser);
+        repository.rollback();
+
+        UserLong retrieved = repository.findById(5L).orElse(null);
+        Assertions.assertNull(retrieved);
+    }
+
+    @Test
+    public void testExecuteInTransactionSuccess() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        repository.executeInTransaction(repo -> {
+            repo.save(new UserLong(6L, "Frank", 40, true, "admin", "Frankie"));
+            repo.save(new UserLong(7L, "Grace", 32, false, "user", null));
+        });
+
+        Assertions.assertNotNull(repository.findById(6L).orElse(null));
+        Assertions.assertNotNull(repository.findById(7L).orElse(null));
+        Assertions.assertEquals(5, repository.findAll().size());
+    }
+
+    @Test
+    public void testExecuteInTransactionRollbackOnError() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            repository.executeInTransaction(repo -> {
+                repo.save(new UserLong(8L, "Henry", 45, true, "admin", null));
+                throw new RuntimeException("Simulated error");
+            });
+        });
+
+        UserLong retrieved = repository.findById(8L).orElse(null);
+        Assertions.assertNull(retrieved);
+        Assertions.assertEquals(3, repository.findAll().size());
+    }
+
+    @Test
+    public void testTransactionIsolation() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        repository.beginTransaction();
+        repository.save(new UserLong(9L, "Iris", 27, true, "user", null));
+
+        // Update within transaction
+        UserLong user = repository.findById(1L).orElse(null);
+        Assertions.assertNotNull(user);
+        user.setAge(31);
+        repository.save(user);
+
+        repository.commit();
+
+        UserLong retrieved = repository.findById(9L).orElse(null);
+        Assertions.assertNotNull(retrieved);
+        Assertions.assertEquals("Iris", retrieved.getName());
+
+        UserLong updated = repository.findById(1L).orElse(null);
+        Assertions.assertNotNull(updated);
+        Assertions.assertEquals(31, updated.getAge());
+    }
+
+    @Test
+    public void testNoActiveTransactionCommit() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        Assertions.assertThrows(IllegalStateException.class, () -> repository.commit());
+    }
+
+    @Test
+    public void testNoActiveTransactionRollback() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        Assertions.assertThrows(IllegalStateException.class, () -> repository.rollback());
+    }
+
+    @Test
+    public void testDoubleBeginTransaction() {
+        Assumptions.assumeTrue(database.supports(fr.robotv2.anchor.api.database.SupportType.TRANSACTION),
+                "Database does not support transactions");
+
+        repository.beginTransaction();
+        Assertions.assertThrows(IllegalStateException.class, () -> repository.beginTransaction());
+        repository.rollback(); // Clean up
+    }
 }

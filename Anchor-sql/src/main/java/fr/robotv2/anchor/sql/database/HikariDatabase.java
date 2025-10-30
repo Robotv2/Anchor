@@ -22,6 +22,7 @@ public abstract class HikariDatabase implements SQLDatabase {
 
     protected final HikariDataSource source;
     protected final SQLDialect dialect;
+    private final ThreadLocal<Connection> transactionConnection = new ThreadLocal<>();
 
     @ApiStatus.Internal
     protected HikariDatabase(DataSource source, SQLDialect dialect) {
@@ -49,7 +50,27 @@ public abstract class HikariDatabase implements SQLDatabase {
 
     @Override
     public Connection getConnection() throws SQLException {
+        Connection txConnection = transactionConnection.get();
+        if (txConnection != null) {
+            return txConnection;
+        }
         return this.source.getConnection();
+    }
+
+    /**
+     * Sets the transaction connection for the current thread.
+     * @param connection the connection to use for the transaction, or null to clear
+     */
+    public void setTransactionConnection(Connection connection) {
+        transactionConnection.set(connection);
+    }
+
+    /**
+     * Gets the active transaction connection for the current thread.
+     * @return the transaction connection, or null if no transaction is active
+     */
+    public Connection getTransactionConnection() {
+        return transactionConnection.get();
     }
 
     @Override
@@ -59,28 +80,42 @@ public abstract class HikariDatabase implements SQLDatabase {
 
     @Override
     public boolean execute(String sql) throws SQLException {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        Connection connection = getConnection();
+        boolean isTransactional = transactionConnection.get() != null;
+        
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             return statement.execute();
+        } finally {
+            if (!isTransactional) {
+                connection.close();
+            }
         }
     }
 
     @Override
     public int executeUpdate(String sql, Collection<Object> parameters) throws SQLException {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        Connection connection = getConnection();
+        boolean isTransactional = transactionConnection.get() != null;
+        
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             int index = 1;
             for (Object param : parameters) {
                 statement.setObject(index++, dialect.toDatabaseValue(param));
             }
             return statement.executeUpdate();
+        } finally {
+            if (!isTransactional) {
+                connection.close();
+            }
         }
     }
 
     @Override
     public int executeBatchUpdate(String sql, Collection<Collection<Object>> parameters) throws SQLException {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        Connection connection = getConnection();
+        boolean isTransactional = transactionConnection.get() != null;
+        
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             for (Collection<Object> params : parameters) {
                 int index = 1;
                 for (Object param : params) {
@@ -90,13 +125,19 @@ public abstract class HikariDatabase implements SQLDatabase {
             }
             final int[] results = statement.executeBatch();
             return Arrays.stream(results).sum();
+        } finally {
+            if (!isTransactional) {
+                connection.close();
+            }
         }
     }
 
     @Override
     public <R> List<R> query(String sql, Collection<Object> parameters, RowMapper<R> mapper) throws SQLException {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        Connection connection = getConnection();
+        boolean isTransactional = transactionConnection.get() != null;
+        
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             int index = 1;
             for (Object param : parameters) {
                 statement.setObject(index++, dialect.toDatabaseValue(param));
@@ -108,14 +149,19 @@ public abstract class HikariDatabase implements SQLDatabase {
                 }
             }
             return results;
+        } finally {
+            if (!isTransactional) {
+                connection.close();
+            }
         }
     }
 
     @Override
     public <R> List<R> queryRaw(String sql, RowMapper<R> mapper) throws SQLException {
-        try (Connection connection = getConnection();
-             Statement statement = connection.createStatement()) {
-
+        Connection connection = getConnection();
+        boolean isTransactional = transactionConnection.get() != null;
+        
+        try (Statement statement = connection.createStatement()) {
             List<R> results = new ArrayList<>();
             try (ResultSet rs = statement.executeQuery(sql)) {
                 while (rs.next()) {
@@ -123,6 +169,10 @@ public abstract class HikariDatabase implements SQLDatabase {
                 }
             }
             return results;
+        } finally {
+            if (!isTransactional) {
+                connection.close();
+            }
         }
     }
 
