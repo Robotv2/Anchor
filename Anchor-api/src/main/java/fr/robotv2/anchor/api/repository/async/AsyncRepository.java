@@ -157,47 +157,6 @@ public interface AsyncRepository<ID, E extends Identifiable<ID>> {
             return AsyncQueryableRepository.wrap(queryable, executor);
         }
 
-        return new AsyncRepository<>() {
-
-            @Override
-            public CompletableFuture<Void> save(E entity) {
-                return CompletableFuture.runAsync(() -> repository.save(entity), executor);
-            }
-
-            @Override
-            public CompletableFuture<Void> saveAll(Collection<E> entities) {
-                return CompletableFuture.runAsync(() -> repository.saveAll(entities), executor);
-            }
-
-            @Override
-            public CompletableFuture<Void> delete(E entity) {
-                return CompletableFuture.runAsync(() -> repository.delete(entity), executor);
-            }
-
-            @Override
-            public CompletableFuture<Void> deleteById(ID id) {
-                return CompletableFuture.runAsync(() -> repository.deleteById(id), executor);
-            }
-
-            @Override
-            public CompletableFuture<Void> deleteAll(Collection<E> entities) {
-                return CompletableFuture.runAsync(() -> repository.deleteAll(entities), executor);
-            }
-
-            @Override
-            public CompletableFuture<Void> deleteAllById(Collection<ID> ids) {
-                return CompletableFuture.runAsync(() -> repository.deleteAllById(ids), executor);
-            }
-
-            @Override
-            public CompletableFuture<Optional<E>> findById(ID id) {
-                return CompletableFuture.supplyAsync(() -> repository.findById(id), executor);
-            }
-
-            @Override
-            public CompletableFuture<List<E>> findAll() {
-                return CompletableFuture.supplyAsync(repository::findAll, executor);
-            }
-        };
+        return new AsyncRepositoryWrapper<>(repository, executor);
     }
 }
