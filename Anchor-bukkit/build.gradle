@@ -1,0 +1,40 @@
+plugins {
+    id('com.gradleup.shadow') version '9.2.2'
+}
+
+repositories {
+    maven {
+        name = 'maven-snapshots'
+        url = uri('https://s01.oss.sonatype.org/content/repositories/snapshots/')
+    }
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+    maven {
+        name = 'jitpack.io'
+        url = 'https://jitpack.io'
+    }
+}
+
+dependencies {
+    implementation 'com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT'
+    compileOnly libs.spigot_api
+
+    compileOnly project(":Anchor-api")
+    compileOnly project(":Anchor-sql")
+    compileOnly project(":Anchor-json")
+    compileOnly project(":Anchor-mariadb")
+    compileOnly project(":Anchor-sqlite")
+    compileOnly libs.hikari
+}
+
+shadowJar {
+    dependsOn(':Anchor-sqlite:shadowJar')
+    relocate 'com.alessiodp.libby', 'fr.robotv2.anchor.bukkit.libby'
+    archiveClassifier.set('')
+}
+
+tasks.build {
+    dependsOn shadowJar
+}
