@@ -1,0 +1,6 @@
+dependencies {
+    api project(':Anchor-api')
+    compileOnly libs.gson
+    testImplementation libs.gson
+    testImplementation testFixtures(project(':Anchor-api'))
+}
