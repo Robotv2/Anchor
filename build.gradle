@@ -63,8 +63,11 @@ subprojects {
         }
     }
 
-    // For shaded modules, disable the plain jar to avoid duplicate artifacts
+    // Keep a plain jar for local project dependencies while shadowJar remains
+    // the unclassified artifact used for shaded module builds/publishing.
     plugins.withId('com.gradleup.shadow') {
-        tasks.named('jar').configure { enabled = false }
+        tasks.named('jar').configure {
+            archiveClassifier.set('plain')
+        }
     }
 }
