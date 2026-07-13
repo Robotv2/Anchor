@@ -1,13 +1,13 @@
 package fr.robotv2.anchor.bukkit;
 
-import com.alessiodp.libby.BukkitLibraryManager;
-import com.alessiodp.libby.Library;
-import com.alessiodp.libby.LibraryManager;
 import fr.robotv2.anchor.api.database.Database;
 import fr.robotv2.anchor.json.JsonDatabase;
 import fr.robotv2.anchor.sql.mariadb.MariaDBConfiguration;
 import fr.robotv2.anchor.sql.mariadb.MariaDBDatabase;
 import fr.robotv2.anchor.sql.sqlite.SqliteDatabase;
+import net.byteflux.libby.BukkitLibraryManager;
+import net.byteflux.libby.Library;
+import net.byteflux.libby.LibraryManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 

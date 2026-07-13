@@ -15,10 +15,14 @@ repositories {
         name = 'jitpack.io'
         url = 'https://jitpack.io'
     }
+    maven {
+        name = "AlessioDP"
+        url = "https://repo.alessiodp.com/releases/"
+    }
 }
 
 dependencies {
-    implementation 'com.alessiodp.libby:libby-bukkit:2.0.0-SNAPSHOT'
+    implementation libs.libby_bukkit
     compileOnly libs.spigot_api
 
     compileOnly project(":Anchor-api")
@@ -31,7 +35,7 @@ dependencies {
 
 shadowJar {
     dependsOn(':Anchor-sqlite:shadowJar')
-    relocate 'com.alessiodp.libby', 'fr.robotv2.anchor.bukkit.libby'
+    relocate 'net.byteflux.libby', 'fr.robotv2.anchor.bukkit.libby'
     archiveClassifier.set('')
 }
 
