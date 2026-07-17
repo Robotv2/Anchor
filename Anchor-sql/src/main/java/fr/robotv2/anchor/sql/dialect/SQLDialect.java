@@ -7,6 +7,7 @@ import fr.robotv2.anchor.api.repository.Operator;
 import fr.robotv2.anchor.api.util.BlobSerializationUtility;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -307,6 +308,7 @@ public interface SQLDialect {
             if (targetType == Long.class || targetType == long.class) return n.longValue();
             if (targetType == Float.class || targetType == float.class) return n.floatValue();
             if (targetType == Double.class || targetType == double.class) return n.doubleValue();
+            if (targetType == BigDecimal.class) return new BigDecimal(n.toString());
         }
 
         // Boolean
