@@ -34,7 +34,7 @@ public class MariaDBDatabase extends HikariDatabase {
     }
 
     public MariaDBDatabase(MariaDBConfiguration configuration) {
-        this(defaultConfig(configuration));
+        this(new HikariDataSource(createDataSourceConfig(configuration)));
     }
 
     @Override
@@ -48,12 +48,12 @@ public class MariaDBDatabase extends HikariDatabase {
         return SUPPORTED_TYPES.contains(type);
     }
 
-    private static HikariDataSource defaultConfig(MariaDBConfiguration credentials) {
+    static HikariConfig createDataSourceConfig(MariaDBConfiguration credentials) {
         final HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:mariadb://" + credentials.host() + ":" + credentials.port() + "/" + credentials.database());
         config.setUsername(credentials.username());
         config.setPassword(credentials.password());
-        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        config.setDriverClassName("org.mariadb.jdbc.Driver");
         config.setPoolName("Anchor-Mariadb");
         config.setMaximumPoolSize(MAXIMUM_POOL_SIZE);
         config.setMinimumIdle(MINIMUM_IDLE);
@@ -78,6 +78,6 @@ public class MariaDBDatabase extends HikariDatabase {
         // Set the driver level TCP socket timeout
         // See: https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery
         config.addDataSourceProperty("socketTimeout", String.valueOf(TimeUnit.SECONDS.toMillis(30)));
-        return new HikariDataSource(config);
+        return config;
     }
 }

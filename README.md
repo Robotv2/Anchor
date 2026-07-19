@@ -45,32 +45,35 @@ File-backed JSON Storage for simple applications, local files, and tests. It int
 
 ## Installation
 
-Add JitPack to your build file and include only the modules you need:
+Anchor `v0.1.0` is distributed as independent modules through [JitPack](https://jitpack.io/#Robotv2/Anchor). Replace `[module]` with the module you need.
 
 **Gradle**
 
 ```gradle
 repositories {
-    maven { url 'https://jitpack.io' }
+    mavenCentral()
+    maven { url = uri('https://jitpack.io') }
 }
 
 dependencies {
-    implementation 'com.github.robotv2:Anchor-gradle:1.0-SNAPSHOT:[module]'
+    implementation 'com.github.Robotv2.Anchor:[module]:v0.1.0'
 }
 ```
 
 **Maven**
 
 ```xml
-<repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-</repository>
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
 
 <dependency>
-    <groupId>com.github.robotv2</groupId>
+    <groupId>com.github.Robotv2.Anchor</groupId>
     <artifactId>[module]</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>v0.1.0</version>
 </dependency>
 ```
 
@@ -81,8 +84,8 @@ Replace `[module]` with one of:
 - `Anchor-sqlite` - SQLite storage backend
 - `Anchor-mariadb` - MariaDB storage backend
 - `Anchor-mongodb` - MongoDB storage backend
-- `Anchor-json` - JSON Storage backend
-- `Anchor-bukkit` - Bukkit Integration support
+- `Anchor-json` - JSON storage backend
+- `Anchor-bukkit` - Bukkit integration support
 
 ## Quick Start
 
@@ -166,7 +169,7 @@ if (database.supports(SupportType.QUERY)) {
 
 ## Modules
 
-- **Anchor-api** - Core interfaces, annotations, metadata, and test fixtures
+- **Anchor-api** - Core interfaces, annotations, and metadata
 - **Anchor-sql** - SQL Foundation shared by SQL storage backends
 - **Anchor-sqlite** - SQLite storage backend
 - **Anchor-mariadb** - MariaDB storage backend
@@ -176,8 +179,15 @@ if (database.supports(SupportType.QUERY)) {
 
 ## Requirements
 
-- Java 17+
+- Java 17 or newer
+- Release line: `v0.1.x`
+
+MongoDB support remains work in progress. Its integration tests require a local MongoDB instance and must be enabled explicitly with `MONGODB_TEST_ENABLED=true`.
 
 ## Support
 
-For questions, issues, or contributions, please open an issue or pull request.
+For questions, issues, or contributions, please open an [issue](https://github.com/Robotv2/Anchor/issues) or pull request.
+
+## License
+
+Anchor is available under the [MIT License](LICENSE).

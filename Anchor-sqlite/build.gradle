@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     api project(':Anchor-sql')
-    testImplementation libs.sqlite_jdbc
+    implementation libs.sqlite_jdbc
     testImplementation testFixtures(project(':Anchor-api'))
 }
 

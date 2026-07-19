@@ -1,11 +1,22 @@
 // Root build.gradle
+def anchorVersion = providers.environmentVariable('VERSION').orElse('0.1.0-SNAPSHOT')
+def moduleDescriptions = [
+        'Anchor-api'    : 'Core interfaces, annotations, metadata, and test fixtures for Anchor.',
+        'Anchor-sql'    : 'Shared SQL repository and schema support for Anchor storage backends.',
+        'Anchor-sqlite' : 'SQLite persistence backend for Anchor.',
+        'Anchor-json'   : 'File-backed JSON persistence backend for Anchor.',
+        'Anchor-bukkit' : 'Bukkit integration and dependency-loading support for Anchor.',
+        'Anchor-mariadb': 'MariaDB persistence backend for Anchor.',
+        'Anchor-mongodb': 'MongoDB persistence backend for Anchor.'
+]
+
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply from: "$rootDir/dependencies.gradle"
 
-    group = 'fr.robotv2.anchor'
-    version = '1.0-SNAPSHOT'
+    group = 'com.github.Robotv2.Anchor'
+    version = anchorVersion.get()
 
     java {
         toolchain {
@@ -19,6 +30,13 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
+    description = moduleDescriptions[project.name]
+
+    tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+
     repositories {
         mavenCentral()
     }
@@ -27,6 +45,7 @@ subprojects {
         compileOnly libs.jetbrains_annotations
         testImplementation platform(libs.junit_bom)
         testImplementation libs.junit_jupiter
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
     test {
@@ -58,6 +77,37 @@ subprojects {
                     }
                 } else {
                     from(components.java)
+                }
+
+                pom {
+                    name = project.name
+                    description = project.description
+                    url = 'https://github.com/Robotv2/Anchor'
+                    inceptionYear = '2026'
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/licenses/MIT'
+                            distribution = 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'Robotv2'
+                            name = 'Robotv2'
+                            url = 'https://github.com/Robotv2'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/Robotv2/Anchor.git'
+                        developerConnection = 'scm:git:ssh://git@github.com/Robotv2/Anchor.git'
+                        url = 'https://github.com/Robotv2/Anchor'
+                    }
+                    issueManagement {
+                        system = 'GitHub'
+                        url = 'https://github.com/Robotv2/Anchor/issues'
+                    }
                 }
             }
         }

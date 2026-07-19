@@ -16,3 +16,16 @@ shadowJar {
 tasks.build {
     dependsOn shadowJar
 }
+
+tasks.named('test') {
+    def mongodbTestsEnabled = providers.environmentVariable('MONGODB_TEST_ENABLED')
+            .map { it.toBoolean() }
+            .orElse(false)
+
+    onlyIf {
+        if (!mongodbTestsEnabled.get()) {
+            logger.lifecycle('Skipping MongoDB integration tests; set MONGODB_TEST_ENABLED=true to enable them.')
+        }
+        mongodbTestsEnabled.get()
+    }
+}

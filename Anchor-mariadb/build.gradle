@@ -4,8 +4,7 @@ plugins {
 
 dependencies {
     api project(':Anchor-sql')
-    testImplementation libs.mariadb_java_client
-    testImplementation libs.mysql_connector_java
+    implementation libs.mariadb_java_client
     testImplementation 'com.h2database:h2:2.2.220'
     testImplementation testFixtures(project(':Anchor-api'))
 }

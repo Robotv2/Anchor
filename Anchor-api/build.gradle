@@ -2,6 +2,15 @@ plugins {
     id 'java-test-fixtures'
 }
 
+components.java {
+    withVariantsFromConfiguration(configurations.testFixturesApiElements) {
+        skip()
+    }
+    withVariantsFromConfiguration(configurations.testFixturesRuntimeElements) {
+        skip()
+    }
+}
+
 dependencies {
     testFixturesApi libs.junit_jupiter_api
 }
