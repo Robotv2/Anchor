@@ -12,6 +12,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.util.Locale;
 
 public class AnchorBukkit {
 
@@ -92,18 +93,17 @@ public class AnchorBukkit {
      * @throws IllegalArgumentException If the database type is unknown or required classes are missing.
      */
     public static Database resolveDatabase(Plugin plugin, ConfigurationSection section) {
-        final String type = section.getString("type", "json").toLowerCase();
+        final String type = section.getString("type", "json").toLowerCase(Locale.ROOT);
         return switch (type) {
 
             case "json" -> {
                 if(!isJsonAvailable()) {
                     throw new IllegalStateException("JsonDatabase class not found. Please include the JSON module.");
                 }
-                String filename = "data.json";
                 final ConfigurationSection dbSection = section.getConfigurationSection("json");
-                if(dbSection != null) {
-                    filename = section.getString("file", "data.json");
-                }
+                final String filename = dbSection == null
+                        ? section.getString("file", "data.json")
+                        : dbSection.getString("file", section.getString("file", "data.json"));
                 yield new JsonDatabase(new File(plugin.getDataFolder(), filename));
             }
 
@@ -111,11 +111,10 @@ public class AnchorBukkit {
                 if(!isSqliteAvailable()) {
                     throw new IllegalStateException("SqliteDatabase class not found. Please include the SQLite module.");
                 }
-                String filename = "data.database";
                 final ConfigurationSection dbSection = section.getConfigurationSection("sqlite");
-                if(dbSection != null) {
-                    filename = section.getString("file", "data.database");
-                }
+                final String filename = dbSection == null
+                        ? section.getString("file", "data.database")
+                        : dbSection.getString("file", section.getString("file", "data.database"));
 
                 yield new SqliteDatabase(new File(plugin.getDataFolder(), filename));
             }

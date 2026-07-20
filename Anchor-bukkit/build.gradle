@@ -31,6 +31,12 @@ dependencies {
     compileOnly project(":Anchor-mariadb")
     compileOnly project(":Anchor-sqlite")
     compileOnly libs.hikari
+
+    testImplementation libs.spigot_api
+    testImplementation project(":Anchor-json")
+    testImplementation project(":Anchor-mariadb")
+    testImplementation project(":Anchor-sqlite")
+    testImplementation libs.hikari
 }
 
 shadowJar {
