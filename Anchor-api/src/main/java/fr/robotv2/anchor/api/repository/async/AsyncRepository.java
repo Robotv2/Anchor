@@ -6,6 +6,7 @@ import fr.robotv2.anchor.api.repository.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -149,10 +150,14 @@ public interface AsyncRepository<ID, E extends Identifiable<ID>> {
      * @param <ID> the type of entity identifiers
      * @param <E> the entity type extending {@link Identifiable}
      * @param repository the synchronous repository to wrap, must not be {@code null}
+     * @param executor the executor used for repository operations, must not be {@code null}
      * @return an AsyncRepository that delegates to the given synchronous repository
-     * @throws IllegalArgumentException if repository is {@code null}
+     * @throws NullPointerException if repository or executor is {@code null}
      */
     static <ID, E extends Identifiable<ID>> AsyncRepository<ID, E> wrap(Repository<ID, E> repository, Executor executor) {
+        Objects.requireNonNull(repository, "repository");
+        Objects.requireNonNull(executor, "executor");
+
         if(repository instanceof QueryableRepository<ID,E> queryable) {
             return AsyncQueryableRepository.wrap(queryable, executor);
         }

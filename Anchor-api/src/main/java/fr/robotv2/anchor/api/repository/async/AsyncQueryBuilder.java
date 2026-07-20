@@ -5,6 +5,7 @@ import fr.robotv2.anchor.api.repository.Operator;
 import fr.robotv2.anchor.api.repository.QueryBuilder;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -124,12 +125,16 @@ public interface AsyncQueryBuilder<ID, T extends Identifiable<ID>> {
      * </p>
      *
      * @param builder the synchronous QueryBuilder to wrap, must not be {@code null}
+     * @param executor the executor used for query operations, must not be {@code null}
      * @param <ID> the type of entity identifiers
      * @param <E> the entity type extending {@link Identifiable}
      * @return an AsyncQueryBuilder that wraps the provided QueryBuilder
-     * @throws IllegalArgumentException if builder is {@code null}
+     * @throws NullPointerException if builder or executor is {@code null}
      */
     static <ID, E extends Identifiable<ID>> AsyncQueryBuilder<ID, E> wrap(QueryBuilder<ID, E> builder, Executor executor) {
+        Objects.requireNonNull(builder, "builder");
+        Objects.requireNonNull(executor, "executor");
+
         return new AsyncQueryBuilder<>() {
 
             @Override

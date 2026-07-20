@@ -5,6 +5,7 @@ import fr.robotv2.anchor.api.repository.QueryableRepository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -34,12 +35,16 @@ public interface AsyncQueryableRepository<ID, T extends Identifiable<ID>> extend
      * </p>
      *
      * @param repository the synchronous QueryableRepository to wrap, must not be {@code null}
+     * @param executor   the executor used for repository operations, must not be {@code null}
      * @param <ID>       the type of entity identifiers
      * @param <E>        the entity type extending {@link Identifiable}
      * @return an AsyncQueryableRepository that wraps the provided repository, never {@code null}
-     * @throws IllegalArgumentException if repository is {@code null}
+     * @throws NullPointerException if repository or executor is {@code null}
      */
     static <ID, E extends Identifiable<ID>> AsyncQueryableRepository<ID, E> wrap(QueryableRepository<ID, E> repository, Executor executor) {
+        Objects.requireNonNull(repository, "repository");
+        Objects.requireNonNull(executor, "executor");
+
         return new AsyncQueryableRepository<>() {
 
             @Override
