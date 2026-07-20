@@ -9,6 +9,24 @@ dependencies {
     testImplementation testFixtures(project(':Anchor-api'))
 }
 
+sourceSets {
+    integrationTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+    integrationTestImplementation platform(libs.testcontainers_bom)
+    integrationTestImplementation libs.testcontainers_junit
+    integrationTestImplementation libs.testcontainers_mariadb
+}
+
 shadowJar {
     dependsOn(':Anchor-sql:shadowJar')
     archiveClassifier.set('')
@@ -16,4 +34,16 @@ shadowJar {
 
 tasks.build {
     dependsOn shadowJar
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs the MariaDB 11.4 container contract.'
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter tasks.named('test')
+}
+
+tasks.named('test', Test) {
+    description = 'Runs the H2 MySQL-mode compatibility contract (not MariaDB certification).'
 }

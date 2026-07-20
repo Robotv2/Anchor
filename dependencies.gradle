@@ -10,6 +10,7 @@ ext {
             mariadb_java_client: '3.2.0',
             mysql_connector_java: '8.1.0',
             mongodb_driver: '5.2.0',
+            testcontainers: '2.0.5',
             spigot_api: '1.21-R0.1-SNAPSHOT',
             libby_bukkit: '1.3.1'
     ]
@@ -26,6 +27,10 @@ ext {
             libby_bukkit: "net.byteflux:libby-bukkit:${versions.libby_bukkit}",
             mariadb_java_client: "org.mariadb.jdbc:mariadb-java-client:${versions.mariadb_java_client}",
             mysql_connector_java: "com.mysql:mysql-connector-j:${versions.mysql_connector_java}",
-            mongodb_driver_sync: "org.mongodb:mongodb-driver-sync:${versions.mongodb_driver}"
+            mongodb_driver_sync: "org.mongodb:mongodb-driver-sync:${versions.mongodb_driver}",
+            testcontainers_bom: "org.testcontainers:testcontainers-bom:${versions.testcontainers}",
+            testcontainers_junit: "org.testcontainers:testcontainers-junit-jupiter",
+            testcontainers_mariadb: "org.testcontainers:testcontainers-mariadb",
+            testcontainers_mongodb: "org.testcontainers:testcontainers-mongodb"
     ]
 }

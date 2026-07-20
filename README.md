@@ -45,7 +45,7 @@ File-backed JSON Storage for simple applications, local files, and tests. It int
 
 ## Installation
 
-Anchor `v0.1.0` is distributed as independent modules through [JitPack](https://jitpack.io/#Robotv2/Anchor). Replace `[module]` with the module you need.
+Anchor `v0.1.1` is distributed as independent modules through [JitPack](https://jitpack.io/#Robotv2/Anchor). Replace `[module]` with the module you need.
 
 **Gradle**
 
@@ -56,7 +56,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.Robotv2.Anchor:[module]:v0.1.0'
+    implementation 'com.github.Robotv2.Anchor:[module]:v0.1.1'
 }
 ```
 
@@ -73,7 +73,7 @@ dependencies {
 <dependency>
     <groupId>com.github.Robotv2.Anchor</groupId>
     <artifactId>[module]</artifactId>
-    <version>v0.1.0</version>
+    <version>v0.1.1</version>
 </dependency>
 ```
 
@@ -182,7 +182,7 @@ if (database.supports(SupportType.QUERY)) {
 - Java 17 or newer
 - Release line: `v0.1.x`
 
-MongoDB support remains work in progress. Its integration tests require a local MongoDB instance and must be enabled explicitly with `MONGODB_TEST_ENABLED=true`.
+MongoDB support remains work in progress. Its integration tests run against MongoDB 8.0 through Testcontainers and require Docker.
 
 ## Support
 

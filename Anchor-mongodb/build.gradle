@@ -9,6 +9,24 @@ dependencies {
     testImplementation testFixtures(project(':Anchor-api'))
 }
 
+sourceSets {
+    integrationTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+    integrationTestImplementation platform(libs.testcontainers_bom)
+    integrationTestImplementation libs.testcontainers_junit
+    integrationTestImplementation libs.testcontainers_mongodb
+}
+
 shadowJar {
     archiveClassifier.set('')
 }
@@ -17,15 +35,10 @@ tasks.build {
     dependsOn shadowJar
 }
 
-tasks.named('test') {
-    def mongodbTestsEnabled = providers.environmentVariable('MONGODB_TEST_ENABLED')
-            .map { it.toBoolean() }
-            .orElse(false)
-
-    onlyIf {
-        if (!mongodbTestsEnabled.get()) {
-            logger.lifecycle('Skipping MongoDB integration tests; set MONGODB_TEST_ENABLED=true to enable them.')
-        }
-        mongodbTestsEnabled.get()
-    }
+tasks.register('integrationTest', Test) {
+    description = 'Runs the MongoDB 8.0 container contract.'
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter tasks.named('test')
 }

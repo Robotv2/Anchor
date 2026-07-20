@@ -3,9 +3,10 @@ package fr.robotv2.anchor.json.test;
 import fr.robotv2.anchor.api.repository.Repository;
 import fr.robotv2.anchor.json.JsonDatabase;
 import fr.robotv2.anchor.json.JsonRepository;
-import fr.robotv2.anchor.test.AbstractUserLongTest;
+import fr.robotv2.anchor.test.BlobStoredFieldContract;
+import fr.robotv2.anchor.test.CoreRepositoryContract;
+import fr.robotv2.anchor.test.RepositoryContractSupport;
 import fr.robotv2.anchor.test.model.UserLong;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -13,7 +14,8 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserLongTest extends AbstractUserLongTest {
+public class UserLongTest extends RepositoryContractSupport
+        implements CoreRepositoryContract, BlobStoredFieldContract {
 
     @Override
     protected JsonDatabase createDatabase(Path tempDir) {
@@ -22,7 +24,6 @@ public class UserLongTest extends AbstractUserLongTest {
 
     @Test
     public void testNamingStrategy() {
-        Assumptions.assumeTrue(database instanceof JsonDatabase, "Database is not a JsonDatabase");
         final JsonDatabase jsonDatabase = (JsonDatabase) database;
         final Repository<Long, UserLong> repository = jsonDatabase.getRepository(UserLong.class);
         final UserLong user = repository.findById(1L).orElse(null);
@@ -32,7 +33,6 @@ public class UserLongTest extends AbstractUserLongTest {
 
     @Test
     public void testFileCreation() {
-        Assumptions.assumeTrue(database instanceof JsonDatabase, "Database is not a JsonDatabase");
         final JsonDatabase jsonDatabase = (JsonDatabase) database;
         final JsonRepository<Long, UserLong> repository = jsonDatabase.getRepository(UserLong.class);
         final File file = repository.resolveFile(1L);

@@ -1,5 +1,12 @@
 // Root build.gradle
-def anchorVersion = providers.environmentVariable('VERSION').orElse('0.1.0-SNAPSHOT')
+plugins {
+    id 'base'
+    id 'jacoco'
+}
+
+def anchorVersion = providers.environmentVariable('VERSION').orElse('0.1.1-SNAPSHOT')
+def jacocoVersion = '0.8.15'
+def publicationRepository = layout.buildDirectory.dir('publication-check-repository')
 def moduleDescriptions = [
         'Anchor-api'    : 'Core interfaces, annotations, metadata, and test fixtures for Anchor.',
         'Anchor-sql'    : 'Shared SQL repository and schema support for Anchor storage backends.',
@@ -10,8 +17,27 @@ def moduleDescriptions = [
         'Anchor-mongodb': 'MongoDB persistence backend for Anchor.'
 ]
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = publicationRepository
+            }
+        }
+        filter {
+            includeGroup 'com.github.Robotv2.Anchor'
+        }
+    }
+    mavenCentral()
+}
+
+jacoco {
+    toolVersion = jacocoVersion
+}
+
 subprojects {
     apply plugin: 'java-library'
+    apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
     apply from: "$rootDir/dependencies.gradle"
 
@@ -24,6 +50,10 @@ subprojects {
         }
         withSourcesJar()
         withJavadocJar()
+    }
+
+    jacoco {
+        toolVersion = jacocoVersion
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -48,14 +78,42 @@ subprojects {
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
-    test {
+    tasks.withType(Test).configureEach {
         useJUnitPlatform()
+
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(
+                    providers.gradleProperty('testRuntimeJava').orElse('17').get().toInteger()
+            )
+        }
+
+        afterSuite { descriptor, result ->
+            if (descriptor.parent == null && result.skippedTestCount > 0) {
+                throw new GradleException(
+                        "${path} skipped ${result.skippedTestCount} test(s); required suites must be explicit."
+                )
+            }
+        }
+    }
+
+    tasks.named('jacocoTestReport', JacocoReport) {
+        reports {
+            xml.required = true
+            html.required = true
+            csv.required = false
+        }
     }
 
     publishing {
         publications {
             // Choose component later (prefer shadow if present)
             mavenJava(MavenPublication)
+        }
+        repositories {
+            maven {
+                name = 'publicationCheck'
+                url = publicationRepository
+            }
         }
     }
 
@@ -120,4 +178,143 @@ subprojects {
             archiveClassifier.set('plain')
         }
     }
+}
+
+def productionProjects = subprojects
+def allTestTasks = providers.provider {
+    productionProjects.collectMany { project ->
+        project.tasks.withType(Test).toList()
+    }
+}
+def allExecutionData = providers.provider {
+    productionProjects.collect { project ->
+        project.fileTree(project.layout.buildDirectory.dir('jacoco')) {
+            include '*.exec'
+        }
+    }
+}
+
+subprojects {
+    tasks.named('jacocoTestReport', JacocoReport) {
+        dependsOn allTestTasks
+        executionData.from(allExecutionData)
+    }
+}
+
+def verifyRequiredReports = { List<String> suitePaths ->
+    suitePaths.each { suitePath ->
+        int separator = suitePath.lastIndexOf(':')
+        String projectPath = suitePath.substring(0, separator)
+        String taskName = suitePath.substring(separator + 1)
+        Project suiteProject = project(projectPath)
+        File reportDirectory = suiteProject.layout.buildDirectory
+                .dir("test-results/${taskName}")
+                .get()
+                .asFile
+        List<File> reports = suiteProject.fileTree(reportDirectory) {
+            include 'TEST-*.xml'
+        }.files.toList()
+
+        if (reports.isEmpty()) {
+            throw new GradleException("${suitePath} discovered zero tests.")
+        }
+
+        int tests = 0
+        int skipped = 0
+        reports.each { report ->
+            def suite = new XmlSlurper().parse(report)
+            tests += suite.@tests.toInteger()
+            skipped += suite.@skipped.toInteger()
+        }
+
+        if (tests == 0) {
+            throw new GradleException("${suitePath} discovered zero tests.")
+        }
+        if (skipped > 0) {
+            throw new GradleException("${suitePath} skipped ${skipped} test(s).")
+        }
+    }
+}
+
+tasks.register('test') {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs deterministic unit and local compatibility tests.'
+    dependsOn {
+        productionProjects.collect { it.tasks.named('test') }
+    }
+    doLast {
+        verifyRequiredReports([
+                ':Anchor-api:test',
+                ':Anchor-json:test',
+                ':Anchor-sqlite:test',
+                ':Anchor-mariadb:test'
+        ])
+    }
+}
+
+tasks.register('integrationTest') {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs Testcontainers-backed MariaDB and MongoDB integration tests.'
+    dependsOn ':Anchor-mariadb:integrationTest', ':Anchor-mongodb:integrationTest'
+    doLast {
+        verifyRequiredReports([
+                ':Anchor-mariadb:integrationTest',
+                ':Anchor-mongodb:integrationTest'
+        ])
+    }
+}
+
+tasks.register('aggregateCoverageReport', JacocoReport) {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Generates aggregate JaCoCo HTML and XML reports for all production modules.'
+    dependsOn allTestTasks
+
+    sourceDirectories.from(productionProjects.collect {
+        it.extensions.getByType(SourceSetContainer).named('main').get().allSource.srcDirs
+    })
+    classDirectories.from(productionProjects.collect {
+        it.extensions.getByType(SourceSetContainer).named('main').get().output
+    })
+    executionData.from(allExecutionData)
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/aggregate/aggregate.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/aggregate/html')
+    }
+}
+
+tasks.register('publicationCheck') {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Publishes every module and verifies that each artifact resolves independently.'
+    dependsOn productionProjects.collect {
+        it.tasks.named('publishMavenJavaPublicationToPublicationCheckRepository')
+    }
+    doLast {
+        productionProjects.each { project ->
+            def dependency = dependencies.create("${project.group}:${project.name}:${project.version}")
+            dependency.changing = project.version.toString().endsWith('-SNAPSHOT')
+            def configuration = configurations.detachedConfiguration(dependency)
+            configuration.attributes {
+                attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+                attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+                attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+            }
+            configuration.resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+            configuration.resolve()
+        }
+    }
+}
+
+tasks.register('fullVerification') {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs builds, deterministic tests, integration tests, publication checks, and coverage.'
+    dependsOn productionProjects.collect { it.tasks.named('build') }
+    dependsOn tasks.named('test')
+    dependsOn tasks.named('integrationTest')
+    dependsOn tasks.named('publicationCheck')
+    dependsOn tasks.named('aggregateCoverageReport')
+    dependsOn productionProjects.collect { it.tasks.named('jacocoTestReport') }
 }
